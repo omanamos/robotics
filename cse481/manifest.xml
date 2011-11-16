@@ -9,6 +9,7 @@
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/cse481</url>
   <depend package="pcl" />
+  <depend package="visualization_msgs" />
   <depend package="eigen" />
   <depend package="pcl_ros" />
 </package>

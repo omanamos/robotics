@@ -3,28 +3,34 @@
 
 #include <string>
 #include <vector>
+#include <Eigen/Core>
 #include "cse481/typedefs.h"
 #include "cse481/template_aligner.h"
 
 // Holds an object template and name
 class ObjectTemplate {
   public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     ObjectTemplate(const std::string &name, const PointCloud &model) : 
-      name_(name), model_(model) { }
+      name_(name)
+    {
+      model_.reset(new PointCloud(model));
+    }
     const PointCloud & getModel() const {
-      return model_;
+      return *model_;
     }
     const std::string & getName() const {
       return name_;
     }
   protected:
     std::string name_;
-    PointCloud model_;
+    PointCloud::Ptr model_;
 };
 
 // Represents a template that when transformed, matches an object
 class ObjectMatch {
   public:
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     ObjectMatch(const ObjectTemplate &matched_template, 
         const AffineTransform &final_transformation,
         const float fitness) : 
