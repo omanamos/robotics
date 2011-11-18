@@ -1,0 +1,36 @@
+using System;
+using Thrift;
+using Thrift.Protocol;
+using Thrift.Server;
+using Thrift.Transport;
+
+
+namespace RPC
+{
+    public class CSharpClient
+    {
+        public static void Start()
+        {
+            try
+            {
+                TTransport transport = new TSocket("localhost", 9090);
+                TProtocol protocol = new TBinaryProtocol(transport);
+                Rpc.Client client = new Rpc.Client(protocol);
+
+                transport.Open();
+
+                client.ping();
+                Console.WriteLine("ping");
+                client.test();
+                Console.WriteLine("test");
+
+                transport.Close();
+            }
+            catch (TApplicationException x)
+            {
+                Console.WriteLine(x.StackTrace);
+            }
+
+        }
+    }
+}
