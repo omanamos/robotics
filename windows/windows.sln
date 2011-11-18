@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Controller", "Controller\Controller.csproj", "{421EBB3F-148C-4940-9238-C9F149C8C019}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RPC", "RPC\RPC.csproj", "{B2AFC525-083C-4199-93B8-19BA74549A9B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Communication", "RPC\Communication.csproj", "{B2AFC525-083C-4199-93B8-19BA74549A9B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{90344BCA-6E3A-4C10-A259-E2D5707377B0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,6 +37,16 @@ Global
 		{B2AFC525-083C-4199-93B8-19BA74549A9B}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{B2AFC525-083C-4199-93B8-19BA74549A9B}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{B2AFC525-083C-4199-93B8-19BA74549A9B}.Release|x86.ActiveCfg = Release|Any CPU
+		{90344BCA-6E3A-4C10-A259-E2D5707377B0}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{90344BCA-6E3A-4C10-A259-E2D5707377B0}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{90344BCA-6E3A-4C10-A259-E2D5707377B0}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{90344BCA-6E3A-4C10-A259-E2D5707377B0}.Debug|x86.ActiveCfg = Debug|x86
+		{90344BCA-6E3A-4C10-A259-E2D5707377B0}.Debug|x86.Build.0 = Debug|x86
+		{90344BCA-6E3A-4C10-A259-E2D5707377B0}.Release|Any CPU.ActiveCfg = Release|x86
+		{90344BCA-6E3A-4C10-A259-E2D5707377B0}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{90344BCA-6E3A-4C10-A259-E2D5707377B0}.Release|Mixed Platforms.Build.0 = Release|x86
+		{90344BCA-6E3A-4C10-A259-E2D5707377B0}.Release|x86.ActiveCfg = Release|x86
+		{90344BCA-6E3A-4C10-A259-E2D5707377B0}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

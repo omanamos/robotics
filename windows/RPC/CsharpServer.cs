@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Thrift.Server;
 using Thrift.Transport;
 
-namespace RPC
+namespace Communication
 {
     public class RpcHanlder : Rpc.Iface
     {
@@ -15,6 +15,7 @@ namespace RPC
 
         public string test()
         {
+            Console.WriteLine("test()");
             return "Hello World!";
         }
 

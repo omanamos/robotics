@@ -1,4 +1,4 @@
-namespace csharp RPC
+namespace csharp Communication
 
 service Rpc {
 

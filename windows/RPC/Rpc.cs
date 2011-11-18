@@ -12,7 +12,7 @@ using Thrift;
 using Thrift.Collections;
 using Thrift.Protocol;
 using Thrift.Transport;
-namespace RPC
+namespace Communication
 {
   public class Rpc {
     public interface Iface {

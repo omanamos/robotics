@@ -7,3 +7,4 @@ NaoTests/
 *.suo
 *.cachefile
 *.vsmdi
+windows/Test/

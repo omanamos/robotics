@@ -5,7 +5,7 @@ using Thrift.Server;
 using Thrift.Transport;
 
 
-namespace RPC
+namespace Communication
 {
     public class CSharpClient
     {
@@ -21,7 +21,7 @@ namespace RPC
 
                 client.ping();
                 Console.WriteLine("ping");
-                client.test();
+                Console.WriteLine(client.test());
                 Console.WriteLine("test");
 
                 transport.Close();
