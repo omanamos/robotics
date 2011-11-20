@@ -48,6 +48,8 @@
   <ItemGroup>
     <Compile Include="CsharpClient.cs" />
     <Compile Include="CsharpServer.cs" />
+    <Compile Include="Point.cs" />
+    <Compile Include="PointCloud.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Rpc.cs" />
   </ItemGroup>

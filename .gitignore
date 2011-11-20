@@ -8,3 +8,4 @@ NaoTests/
 *.cachefile
 *.vsmdi
 windows/Test/
+thrift/*
