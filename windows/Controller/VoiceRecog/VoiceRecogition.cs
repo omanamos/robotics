@@ -15,10 +15,15 @@ namespace VoiceRecog
 
         public VoiceRecogition(MainController.State state, MainController controller)
         {
-            this(new CommandGrammarBuilder(state, controller.getLibrary()).getGrammar(), controller);
+            this.initialize(new CommandGrammarBuilder(state, controller.getLibrary()).getGrammar(), controller);
         }
 
         public VoiceRecogition(Grammar grammar, MainController controller)
+        {
+            this.initialize(grammar, controller);
+        }
+
+        private void initialize(Grammar grammar, MainController controller)
         {
             this.controller = controller;
             this.recogEng = new SpeechRecognitionEngine();

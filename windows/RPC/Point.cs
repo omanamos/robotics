@@ -18,11 +18,11 @@ namespace Communication
   [Serializable]
   public partial class Point : TBase
   {
-    private int _x;
-    private int _y;
-    private int _z;
+    private double _x;
+    private double _y;
+    private double _z;
 
-    public int X
+    public double X
     {
       get
       {
@@ -35,7 +35,7 @@ namespace Communication
       }
     }
 
-    public int Y
+    public double Y
     {
       get
       {
@@ -48,7 +48,7 @@ namespace Communication
       }
     }
 
-    public int Z
+    public double Z
     {
       get
       {
@@ -86,22 +86,22 @@ namespace Communication
         switch (field.ID)
         {
           case 1:
-            if (field.Type == TType.I32) {
-              X = iprot.ReadI32();
+            if (field.Type == TType.Double) {
+              X = iprot.ReadDouble();
             } else { 
               TProtocolUtil.Skip(iprot, field.Type);
             }
             break;
           case 2:
-            if (field.Type == TType.I32) {
-              Y = iprot.ReadI32();
+            if (field.Type == TType.Double) {
+              Y = iprot.ReadDouble();
             } else { 
               TProtocolUtil.Skip(iprot, field.Type);
             }
             break;
           case 3:
-            if (field.Type == TType.I32) {
-              Z = iprot.ReadI32();
+            if (field.Type == TType.Double) {
+              Z = iprot.ReadDouble();
             } else { 
               TProtocolUtil.Skip(iprot, field.Type);
             }
@@ -121,26 +121,26 @@ namespace Communication
       TField field = new TField();
       if (__isset.x) {
         field.Name = "x";
-        field.Type = TType.I32;
+        field.Type = TType.Double;
         field.ID = 1;
         oprot.WriteFieldBegin(field);
-        oprot.WriteI32(X);
+        oprot.WriteDouble(X);
         oprot.WriteFieldEnd();
       }
       if (__isset.y) {
         field.Name = "y";
-        field.Type = TType.I32;
+        field.Type = TType.Double;
         field.ID = 2;
         oprot.WriteFieldBegin(field);
-        oprot.WriteI32(Y);
+        oprot.WriteDouble(Y);
         oprot.WriteFieldEnd();
       }
       if (__isset.z) {
         field.Name = "z";
-        field.Type = TType.I32;
+        field.Type = TType.Double;
         field.ID = 3;
         oprot.WriteFieldBegin(field);
-        oprot.WriteI32(Z);
+        oprot.WriteDouble(Z);
         oprot.WriteFieldEnd();
       }
       oprot.WriteFieldStop();

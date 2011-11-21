@@ -18,6 +18,11 @@ namespace Communication
             return new List<PointCloud>();
         }
 
+        public Point locateNao()
+        {
+            return new Point();
+        }
+
     }
 
     public class CSharpServer

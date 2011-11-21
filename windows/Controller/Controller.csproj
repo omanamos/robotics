@@ -48,6 +48,9 @@
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
+    <Reference Include="Thrift">
+      <HintPath>..\..\lib\Thrift.dll</HintPath>
+    </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
@@ -108,6 +111,10 @@
     <ProjectReference Include="..\DataStore\DataStore.csproj">
       <Project>{0F7EC6DF-D871-473C-A557-E6A901FC1EA3}</Project>
       <Name>DataStore</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\RPC\Communication.csproj">
+      <Project>{B2AFC525-083C-4199-93B8-19BA74549A9B}</Project>
+      <Name>Communication</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />

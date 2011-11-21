@@ -32,6 +32,9 @@ namespace VoiceRecog
                 case MainController.State.confirmation:
                     this.grammar = buildConfGrammar();
                     break;
+                case MainController.State.getName:
+                    this.grammar = buildGetNameGrammar();
+                    break;
             }
         }
 
@@ -44,6 +47,13 @@ namespace VoiceRecog
         {
             GrammarBuilder builder = new GrammarBuilder("nao");
             builder.Append(new Choices(new string[] { "abort", "restart" }));
+            return new Grammar(builder);
+        }
+
+        private static Grammar buildGetNameGrammar()
+        {
+            GrammarBuilder builder = new GrammarBuilder("it is called");
+            builder.AppendDictation();
             return new Grammar(builder);
         }
 
@@ -76,7 +86,7 @@ namespace VoiceRecog
 
         private static Grammar buildLearnGrammar()
         {
-            GrammarBuilder builder = new GrammarBuilder("nao");
+            GrammarBuilder builder = new GrammarBuilder();
             return new Grammar(builder);
         }
 

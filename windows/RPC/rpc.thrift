@@ -2,9 +2,9 @@ namespace csharp Communication
 namespace cpp communication
 
 struct Point {
-  1: i32 x,
-  2: i32 y,
-  3: i32 z,
+  1: double x,
+  2: double y,
+  3: double z,
 }
 
 struct PointCloud {
@@ -15,5 +15,6 @@ struct PointCloud {
 
 service Rpc {
    void ping(),
-   list<PointCloud> getObjects()   
+   list<PointCloud> getObjects(),
+   Point locateNao()
 }

@@ -19,6 +19,8 @@ namespace Communication
   public partial class PointCloud : TBase
   {
     private List<Point> _points;
+    private Point _average;
+    private string _identifier;
 
     public List<Point> Points
     {
@@ -33,11 +35,39 @@ namespace Communication
       }
     }
 
+    public Point Average
+    {
+      get
+      {
+        return _average;
+      }
+      set
+      {
+        __isset.average = true;
+        this._average = value;
+      }
+    }
+
+    public string Identifier
+    {
+      get
+      {
+        return _identifier;
+      }
+      set
+      {
+        __isset.identifier = true;
+        this._identifier = value;
+      }
+    }
+
 
     public Isset __isset;
     [Serializable]
     public struct Isset {
       public bool points;
+      public bool average;
+      public bool identifier;
     }
 
     public PointCloud() {
@@ -73,6 +103,21 @@ namespace Communication
               TProtocolUtil.Skip(iprot, field.Type);
             }
             break;
+          case 2:
+            if (field.Type == TType.Struct) {
+              Average = new Point();
+              Average.Read(iprot);
+            } else { 
+              TProtocolUtil.Skip(iprot, field.Type);
+            }
+            break;
+          case 3:
+            if (field.Type == TType.String) {
+              Identifier = iprot.ReadString();
+            } else { 
+              TProtocolUtil.Skip(iprot, field.Type);
+            }
+            break;
           default: 
             TProtocolUtil.Skip(iprot, field.Type);
             break;
@@ -101,6 +146,22 @@ namespace Communication
         }
         oprot.WriteFieldEnd();
       }
+      if (Average != null && __isset.average) {
+        field.Name = "average";
+        field.Type = TType.Struct;
+        field.ID = 2;
+        oprot.WriteFieldBegin(field);
+        Average.Write(oprot);
+        oprot.WriteFieldEnd();
+      }
+      if (Identifier != null && __isset.identifier) {
+        field.Name = "identifier";
+        field.Type = TType.String;
+        field.ID = 3;
+        oprot.WriteFieldBegin(field);
+        oprot.WriteString(Identifier);
+        oprot.WriteFieldEnd();
+      }
       oprot.WriteFieldStop();
       oprot.WriteStructEnd();
     }
@@ -109,6 +170,10 @@ namespace Communication
       StringBuilder sb = new StringBuilder("PointCloud(");
       sb.Append("Points: ");
       sb.Append(Points);
+      sb.Append(",Average: ");
+      sb.Append(Average== null ? "<null>" : Average.ToString());
+      sb.Append(",Identifier: ");
+      sb.Append(Identifier);
       sb.Append(")");
       return sb.ToString();
     }
