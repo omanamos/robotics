@@ -2,26 +2,29 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using LicenseCommon;
+using System.Runtime.Serialization;
 
 using Communication;
 
 namespace DataStore
 {
-    public class ObjectLibrary
+    [Serializable]
+    public class ObjectLibrary : ISerializable
     {
-        private Dictionary<string, RecogObject> objects;
-        private Dictionary<string, PointCloud> knownPointClouds;
+        private SerializableDictionary<string, RecogObject> objects;
+        private SerializableDictionary<string, PointCloud> knownPointClouds;
         private HashSet<PointCloud> unknownPointClouds;
-        private Dictionary<string, List<RecogObject>> lookupByProperty;
+        private SerializableDictionary<string, List<RecogObject>> lookupByProperty;
 
         private PointCloud curLearning;
         private string curLearningName;
 
         public ObjectLibrary()
         {
-            this.objects = new Dictionary<string, RecogObject>();
-            this.lookupByProperty = new Dictionary<string, List<RecogObject>>();
-            this.knownPointClouds = new Dictionary<string, PointCloud>();
+            this.objects = new SerializableDictionary<string, RecogObject>();
+            this.lookupByProperty = new SerializableDictionary<string, List<RecogObject>>();
+            this.knownPointClouds = new SerializableDictionary<string, PointCloud>();
             this.unknownPointClouds = new HashSet<PointCloud>();
         }
 
@@ -127,6 +130,25 @@ namespace DataStore
         public void save(string ACTION_LIB_PATH)
         {
             throw new NotImplementedException();
+        }
+
+
+        /*
+        private SerializableDictionary<string, RecogObject> objects;
+        private SerializableDictionary<string, List<RecogObject>> lookupByProperty;
+         * 
+         */
+
+        public ObjectLibrary(SerializationInfo info, StreamingContext ctxt)
+        {
+            this.objects = (SerializableDictionary<string, RecogObject>)info.GetValue("Objects", typeof(SerializableDictionary<string, RecogObject>));
+            this.lookupByProperty = (SerializableDictionary<string, List<RecogObject>>)info.GetValue("Property", typeof(SerializableDictionary<string, RecogObject>));
+        }
+
+        public void GetObjectData(SerializationInfo info, StreamingContext ctxt)
+        {
+            info.AddValue("Objects", objects);
+            info.AddValue("Property", lookupByProperty);
         }
     }
 }
