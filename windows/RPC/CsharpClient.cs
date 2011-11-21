@@ -21,8 +21,8 @@ namespace Communication
 
                 client.ping();
                 Console.WriteLine("ping");
-                Console.WriteLine(client.test());
-                Console.WriteLine("test");
+                Console.WriteLine(client.getObjects());
+                Console.WriteLine("getObjects");
 
                 transport.Close();
             }

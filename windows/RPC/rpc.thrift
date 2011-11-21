@@ -9,6 +9,8 @@ struct Point {
 
 struct PointCloud {
   1: list<Point> points,
+  2: Point average,
+  3: string identifier
 }
 
 service Rpc {

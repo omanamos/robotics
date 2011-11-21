@@ -13,10 +13,9 @@ namespace Communication
             Console.WriteLine("ping()");
         }
 
-        public string test()
+        public List<PointCloud> getObjects()
         {
-            Console.WriteLine("test()");
-            return "Hello World!";
+            return new List<PointCloud>();
         }
 
     }

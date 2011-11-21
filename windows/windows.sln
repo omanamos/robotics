@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Communication", "RPC\Commun
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test", "Test\Test.csproj", "{90344BCA-6E3A-4C10-A259-E2D5707377B0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataStore", "DataStore\DataStore.csproj", "{0F7EC6DF-D871-473C-A557-E6A901FC1EA3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -47,6 +49,16 @@ Global
 		{90344BCA-6E3A-4C10-A259-E2D5707377B0}.Release|Mixed Platforms.Build.0 = Release|x86
 		{90344BCA-6E3A-4C10-A259-E2D5707377B0}.Release|x86.ActiveCfg = Release|x86
 		{90344BCA-6E3A-4C10-A259-E2D5707377B0}.Release|x86.Build.0 = Release|x86
+		{0F7EC6DF-D871-473C-A557-E6A901FC1EA3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0F7EC6DF-D871-473C-A557-E6A901FC1EA3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0F7EC6DF-D871-473C-A557-E6A901FC1EA3}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{0F7EC6DF-D871-473C-A557-E6A901FC1EA3}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{0F7EC6DF-D871-473C-A557-E6A901FC1EA3}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{0F7EC6DF-D871-473C-A557-E6A901FC1EA3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0F7EC6DF-D871-473C-A557-E6A901FC1EA3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0F7EC6DF-D871-473C-A557-E6A901FC1EA3}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{0F7EC6DF-D871-473C-A557-E6A901FC1EA3}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{0F7EC6DF-D871-473C-A557-E6A901FC1EA3}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
