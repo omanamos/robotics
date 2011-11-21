@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Runtime.Serialization;
 
 using Communication;
 
 namespace DataStore
 {
-    public class RecogObject
+    [Serializable]
+    public class RecogObject : ISerializable
     {
         public readonly string identifier;
         private List<string> properties;
@@ -25,6 +27,18 @@ namespace DataStore
         public List<string> getProperties()
         {
             return this.properties;
+        }
+
+        public RecogObject(SerializationInfo info, StreamingContext ctxt)
+        {
+            this.identifier = (string)info.GetValue("Identifier", typeof(string));
+            this.properties = (List<string>)info.GetValue("Properties", typeof(List<string>));
+        }
+
+        public void GetObjectData(SerializationInfo info, StreamingContext ctxt)
+        {
+            info.AddValue("Identifier", identifier);
+            info.AddValue("Properties", properties);
         }
     }
 }
