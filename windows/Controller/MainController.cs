@@ -23,6 +23,7 @@ namespace Controller
         private State state;
         private State prevState;
 
+        private MainWindow window;
         private Rpc.Client thriftClient;
 
         private VoiceRecogition recog;
@@ -31,8 +32,9 @@ namespace Controller
         private NaoController nao;
         private ObjectLibrary lib;
 
-        public MainController()
+        public MainController(MainWindow window)
         {
+            this.window = window;
             this.nao = new NaoController(NAO_IP);
             this.lib = new ObjectLibrary();
 
@@ -46,6 +48,17 @@ namespace Controller
 
         private void switchStates(State state)
         {
+            window.Dispatcher.BeginInvoke(new Action(
+                delegate()
+                {
+                    window.currentState.Text = state.ToString();
+                    window.availableCommands.Items.Clear();
+                    CommandGrammarBuilder builder = new CommandGrammarBuilder(state, lib);
+                    foreach (string s in builder.getStrings())
+                        window.availableCommands.Items.Add(s);
+                    window.prefix.Text = builder.getPrefix();
+                }));
+
             this.prevState = this.state;
             this.state = state;
             if (this.recog != null)

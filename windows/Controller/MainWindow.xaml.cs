@@ -19,9 +19,20 @@ namespace Controller
     /// </summary>
     public partial class MainWindow : Window
     {
+        MainController controller;
         public MainWindow()
         {
             InitializeComponent();
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            controller = new MainController();
+        }
+
+        private void Window_Closed(object sender, EventArgs e)
+        {
+            controller.exit();
         }
     }
 }

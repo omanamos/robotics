@@ -12,9 +12,12 @@ namespace VoiceRecog
     class CommandGrammarBuilder
     {
         private Grammar grammar;
+        private string prefix;
+        private List<string> strings;
 
         public CommandGrammarBuilder(MainController.State state, ObjectLibrary lib)
         {
+            this.strings = new List<string>();
             switch (state)
             {
                 case MainController.State.waiting:
@@ -43,6 +46,16 @@ namespace VoiceRecog
             return this.grammar;
         }
 
+        public string getPrefix()
+        {
+            return this.prefix;
+        }
+
+        public List<string> getStrings()
+        {
+            return this.strings;
+        }
+
         public static Grammar buildInterruptGrammar()
         {
             GrammarBuilder builder = new GrammarBuilder("nao");
@@ -50,27 +63,34 @@ namespace VoiceRecog
             return new Grammar(builder);
         }
 
-        private static Grammar buildGetNameGrammar()
+        private Grammar buildGetNameGrammar()
         {
             GrammarBuilder builder = new GrammarBuilder("it is called");
             builder.AppendDictation();
+            this.prefix = "it is called";
             return new Grammar(builder);
         }
 
-        private static Grammar buildWaitingGrammar()
+        private Grammar buildWaitingGrammar()
         {
             GrammarBuilder builder = new GrammarBuilder("nao");
             builder.Append("set up");
+            this.prefix = "nao";
+            this.strings.Add("set up");
             return new Grammar(builder);
         }
 
-        private static Grammar buildStartGrammar(ObjectLibrary lib)
+        private Grammar buildStartGrammar(ObjectLibrary lib)
         {
+            this.prefix = "nao";
             GrammarBuilder builder = new GrammarBuilder("nao");
             Choices topLevel = new Choices();
             topLevel.Add("identify known objects");
+            this.strings.Add("identify known objects");
             topLevel.Add("learn unknown objects");
+            this.strings.Add("learn unknown objects");
 
+            /*
             GrammarBuilder propertyGrammar = new GrammarBuilder("find all");
             propertyGrammar.Append(new Choices(lib.getProperties().ToArray()));
             propertyGrammar.Append("objects");
@@ -79,25 +99,28 @@ namespace VoiceRecog
             GrammarBuilder identifierGrammar = new GrammarBuilder("locate");
             identifierGrammar.Append(new Choices(lib.getIdentifiers().ToArray()));
             topLevel.Add(propertyGrammar);
-
+            */
             builder.Append(topLevel);
             return new Grammar(builder);
         }
 
-        private static Grammar buildLearnGrammar()
+        private Grammar buildLearnGrammar()
         {
             GrammarBuilder builder = new GrammarBuilder();
             return new Grammar(builder);
         }
 
-        private static Grammar buildFindGrammar()
+        private Grammar buildFindGrammar()
         {
             GrammarBuilder builder = new GrammarBuilder("nao");
             return new Grammar(builder);
         }
 
-        private static Grammar buildConfGrammar()
+        private Grammar buildConfGrammar()
         {
+            this.prefix = "confirm";
+            this.strings.Add("yes");
+            this.strings.Add("no");
             GrammarBuilder builder = new GrammarBuilder("confirm");
             builder.Append(new Choices(new string[] { "yes", "no" }));
             return new Grammar(builder);

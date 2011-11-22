@@ -47,6 +47,7 @@
     <Compile Include="ObjectLibrary.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RecogObject.cs" />
+    <Compile Include="SerializableDictionary.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\RPC\Communication.csproj">
