@@ -25,29 +25,29 @@ typedef struct _Point__isset {
 class Point {
  public:
 
-  static const char* ascii_fingerprint; // = "6435B39C87AB0E30F30BEDEFD7328C0D";
-  static const uint8_t binary_fingerprint[16]; // = {0x64,0x35,0xB3,0x9C,0x87,0xAB,0x0E,0x30,0xF3,0x0B,0xED,0xEF,0xD7,0x32,0x8C,0x0D};
+  static const char* ascii_fingerprint; // = "EFFAD640FBA2CA56C50155B2A4545897";
+  static const uint8_t binary_fingerprint[16]; // = {0xEF,0xFA,0xD6,0x40,0xFB,0xA2,0xCA,0x56,0xC5,0x01,0x55,0xB2,0xA4,0x54,0x58,0x97};
 
   Point() : x(0), y(0), z(0) {
   }
 
   virtual ~Point() throw() {}
 
-  int32_t x;
-  int32_t y;
-  int32_t z;
+  double x;
+  double y;
+  double z;
 
   _Point__isset __isset;
 
-  void __set_x(const int32_t val) {
+  void __set_x(const double val) {
     x = val;
   }
 
-  void __set_y(const int32_t val) {
+  void __set_y(const double val) {
     y = val;
   }
 
-  void __set_z(const int32_t val) {
+  void __set_z(const double val) {
     z = val;
   }
 
@@ -73,22 +73,26 @@ class Point {
 };
 
 typedef struct _PointCloud__isset {
-  _PointCloud__isset() : points(false) {}
+  _PointCloud__isset() : points(false), average(false), identifier(false) {}
   bool points;
+  bool average;
+  bool identifier;
 } _PointCloud__isset;
 
 class PointCloud {
  public:
 
-  static const char* ascii_fingerprint; // = "472B8583FB07D1D9EA40FEBBDE10B800";
-  static const uint8_t binary_fingerprint[16]; // = {0x47,0x2B,0x85,0x83,0xFB,0x07,0xD1,0xD9,0xEA,0x40,0xFE,0xBB,0xDE,0x10,0xB8,0x00};
+  static const char* ascii_fingerprint; // = "DB516E1F88886FFE4164E5FDD3EBF640";
+  static const uint8_t binary_fingerprint[16]; // = {0xDB,0x51,0x6E,0x1F,0x88,0x88,0x6F,0xFE,0x41,0x64,0xE5,0xFD,0xD3,0xEB,0xF6,0x40};
 
-  PointCloud() {
+  PointCloud() : identifier("") {
   }
 
   virtual ~PointCloud() throw() {}
 
   std::vector<Point>  points;
+  Point average;
+  std::string identifier;
 
   _PointCloud__isset __isset;
 
@@ -96,9 +100,21 @@ class PointCloud {
     points = val;
   }
 
+  void __set_average(const Point& val) {
+    average = val;
+  }
+
+  void __set_identifier(const std::string& val) {
+    identifier = val;
+  }
+
   bool operator == (const PointCloud & rhs) const
   {
     if (!(points == rhs.points))
+      return false;
+    if (!(average == rhs.average))
+      return false;
+    if (!(identifier == rhs.identifier))
       return false;
     return true;
   }

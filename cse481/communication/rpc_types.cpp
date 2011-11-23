@@ -7,8 +7,8 @@
 
 namespace communication {
 
-const char* Point::ascii_fingerprint = "6435B39C87AB0E30F30BEDEFD7328C0D";
-const uint8_t Point::binary_fingerprint[16] = {0x64,0x35,0xB3,0x9C,0x87,0xAB,0x0E,0x30,0xF3,0x0B,0xED,0xEF,0xD7,0x32,0x8C,0x0D};
+const char* Point::ascii_fingerprint = "EFFAD640FBA2CA56C50155B2A4545897";
+const uint8_t Point::binary_fingerprint[16] = {0xEF,0xFA,0xD6,0x40,0xFB,0xA2,0xCA,0x56,0xC5,0x01,0x55,0xB2,0xA4,0x54,0x58,0x97};
 
 uint32_t Point::read(::apache::thrift::protocol::TProtocol* iprot) {
 
@@ -31,24 +31,24 @@ uint32_t Point::read(::apache::thrift::protocol::TProtocol* iprot) {
     switch (fid)
     {
       case 1:
-        if (ftype == ::apache::thrift::protocol::T_I32) {
-          xfer += iprot->readI32(this->x);
+        if (ftype == ::apache::thrift::protocol::T_DOUBLE) {
+          xfer += iprot->readDouble(this->x);
           this->__isset.x = true;
         } else {
           xfer += iprot->skip(ftype);
         }
         break;
       case 2:
-        if (ftype == ::apache::thrift::protocol::T_I32) {
-          xfer += iprot->readI32(this->y);
+        if (ftype == ::apache::thrift::protocol::T_DOUBLE) {
+          xfer += iprot->readDouble(this->y);
           this->__isset.y = true;
         } else {
           xfer += iprot->skip(ftype);
         }
         break;
       case 3:
-        if (ftype == ::apache::thrift::protocol::T_I32) {
-          xfer += iprot->readI32(this->z);
+        if (ftype == ::apache::thrift::protocol::T_DOUBLE) {
+          xfer += iprot->readDouble(this->z);
           this->__isset.z = true;
         } else {
           xfer += iprot->skip(ftype);
@@ -69,22 +69,22 @@ uint32_t Point::read(::apache::thrift::protocol::TProtocol* iprot) {
 uint32_t Point::write(::apache::thrift::protocol::TProtocol* oprot) const {
   uint32_t xfer = 0;
   xfer += oprot->writeStructBegin("Point");
-  xfer += oprot->writeFieldBegin("x", ::apache::thrift::protocol::T_I32, 1);
-  xfer += oprot->writeI32(this->x);
+  xfer += oprot->writeFieldBegin("x", ::apache::thrift::protocol::T_DOUBLE, 1);
+  xfer += oprot->writeDouble(this->x);
   xfer += oprot->writeFieldEnd();
-  xfer += oprot->writeFieldBegin("y", ::apache::thrift::protocol::T_I32, 2);
-  xfer += oprot->writeI32(this->y);
+  xfer += oprot->writeFieldBegin("y", ::apache::thrift::protocol::T_DOUBLE, 2);
+  xfer += oprot->writeDouble(this->y);
   xfer += oprot->writeFieldEnd();
-  xfer += oprot->writeFieldBegin("z", ::apache::thrift::protocol::T_I32, 3);
-  xfer += oprot->writeI32(this->z);
+  xfer += oprot->writeFieldBegin("z", ::apache::thrift::protocol::T_DOUBLE, 3);
+  xfer += oprot->writeDouble(this->z);
   xfer += oprot->writeFieldEnd();
   xfer += oprot->writeFieldStop();
   xfer += oprot->writeStructEnd();
   return xfer;
 }
 
-const char* PointCloud::ascii_fingerprint = "472B8583FB07D1D9EA40FEBBDE10B800";
-const uint8_t PointCloud::binary_fingerprint[16] = {0x47,0x2B,0x85,0x83,0xFB,0x07,0xD1,0xD9,0xEA,0x40,0xFE,0xBB,0xDE,0x10,0xB8,0x00};
+const char* PointCloud::ascii_fingerprint = "DB516E1F88886FFE4164E5FDD3EBF640";
+const uint8_t PointCloud::binary_fingerprint[16] = {0xDB,0x51,0x6E,0x1F,0x88,0x88,0x6F,0xFE,0x41,0x64,0xE5,0xFD,0xD3,0xEB,0xF6,0x40};
 
 uint32_t PointCloud::read(::apache::thrift::protocol::TProtocol* iprot) {
 
@@ -126,6 +126,22 @@ uint32_t PointCloud::read(::apache::thrift::protocol::TProtocol* iprot) {
           xfer += iprot->skip(ftype);
         }
         break;
+      case 2:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->average.read(iprot);
+          this->__isset.average = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 3:
+        if (ftype == ::apache::thrift::protocol::T_STRING) {
+          xfer += iprot->readString(this->identifier);
+          this->__isset.identifier = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
       default:
         xfer += iprot->skip(ftype);
         break;
@@ -151,6 +167,12 @@ uint32_t PointCloud::write(::apache::thrift::protocol::TProtocol* oprot) const {
     }
     xfer += oprot->writeListEnd();
   }
+  xfer += oprot->writeFieldEnd();
+  xfer += oprot->writeFieldBegin("average", ::apache::thrift::protocol::T_STRUCT, 2);
+  xfer += this->average.write(oprot);
+  xfer += oprot->writeFieldEnd();
+  xfer += oprot->writeFieldBegin("identifier", ::apache::thrift::protocol::T_STRING, 3);
+  xfer += oprot->writeString(this->identifier);
   xfer += oprot->writeFieldEnd();
   xfer += oprot->writeFieldStop();
   xfer += oprot->writeStructEnd();

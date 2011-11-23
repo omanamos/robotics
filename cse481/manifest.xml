@@ -12,6 +12,8 @@
   <depend package="visualization_msgs" />
   <depend package="eigen" />
   <depend package="pcl_ros" />
+  <depend package="thrift" />
+  <depend package="tf" />
 </package>
 
 
