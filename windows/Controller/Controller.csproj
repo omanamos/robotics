@@ -37,6 +37,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="naoqidotnetvc90">
+      <HintPath>C:\Program Files (x86)\Aldebaran\NAOqi.Net SDK 1.10.44\naoqidotnetvc90.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Speech" />

@@ -26,6 +26,20 @@ namespace DataStore
             this.lookupByProperty = new SerializableDictionary<string, List<RecogObject>>();
             this.knownPointClouds = new SerializableDictionary<string, PointCloud>();
             this.unknownPointClouds = new HashSet<PointCloud>();
+
+            // hard coded to recognize for demo milestone 2
+            // from saveobject method:
+            // this.knownPointClouds[this.curLearningName] = this.curLearning;
+            // RecogObject obj = new RecogObject(this.curLearningName);
+            // this.objects[this.curLearningName] = obj;
+            this.knownPointClouds.Add("box", new PointCloud());
+            RecogObject obj = new RecogObject("box");
+            this.objects["box"] = obj;
+
+            this.knownPointClouds.Add("ball", new PointCloud());
+            RecogObject obj2 = new RecogObject("ball");
+            this.objects["ball"] = obj2;
+
         }
 
         public void addObject(RecogObject obj) 
@@ -104,6 +118,7 @@ namespace DataStore
 
         public RecogObject getObject(string identifier)
         {
+            Console.WriteLine("identifier: " + identifier);
             return this.objects[identifier];
         }
 
