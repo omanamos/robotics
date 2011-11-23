@@ -7,6 +7,8 @@
 #include "cse481/template_aligner.h"
 #include "cse481/object_detector.h"
 
+using namespace cse481;
+
 void ObjectDetector::addTemplate(const ObjectTemplate &t) {
   templates_.push_back(t);
   // create feature cloud

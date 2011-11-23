@@ -62,17 +62,20 @@
 #include "pcl/surface/convex_hull.h"
 #include "pcl/segmentation/extract_polygonal_prism_data.h"
 #include "pcl/segmentation/extract_clusters.h"
-
+#include <tf/transform_listener.h>
 // ROS messages
 #include <sensor_msgs/PointCloud2.h>
 #include "pcl/PointIndices.h"
 #include "pcl/ModelCoefficients.h"
 
 #include "cse481/table_cluster_detector.h"
+#include "cse481/marker_generator.h"
 
 TableClusterDetector::TableClusterDetector ()
 {
   // ---[ Create all PCL objects and set their parameters
+      ros::NodeHandle n;
+      marker_pub = n.advertise<visualization_msgs::Marker>("labels", 10);
 
   // Filtering parameters
   downsample_leaf_ = 0.01;                          // 1cm voxel size by default
@@ -198,6 +201,15 @@ std::vector<PointCloud> TableClusterDetector::findTableClusters(const sensor_msg
   table_projectedPtr.reset (new PointCloud(table_projected));
   ROS_INFO ("[TableObjectDetector::input_callback] Number of projected inliers: %d.", (int)table_projected.points.size ());
 
+  sensor_msgs::PointCloud table_points;
+  tf::Transform table_plane_trans = getPlaneTransform (*table_coefficientsPtr, 1.0);
+  //takes the points projected on the table and transforms them into the PointCloud message
+  //while also transforming them into the table's coordinate system
+  getPlanePoints<Point> (table_projected, table_plane_trans, table_points);
+  ROS_INFO("Table computed");
+
+  table_ = computeTable<sensor_msgs::PointCloud>(cloud.header, table_plane_trans, table_points);
+  publishTable(table_);
   // ---[ Estimate the convex hull
   PointCloud table_hull; PointCloud::Ptr table_hullPtr;
   hull_.setInputCloud (table_projectedPtr);
@@ -244,4 +256,124 @@ std::vector<PointCloud> TableClusterDetector::findTableClusters(const sensor_msg
 
   return clusters;
 
+}
+
+template <class PointCloudType>
+Table TableClusterDetector::computeTable(std_msgs::Header cloud_header,
+                                  const tf::Transform &table_plane_trans, 
+                                  const PointCloudType &table_points)
+{
+  Table table;
+ 
+  //get the extents of the table
+  if (!table_points.points.empty()) 
+  {
+    table.x_min = table_points.points[0].x;
+    table.x_max = table_points.points[0].x;
+    table.y_min = table_points.points[0].y;
+    table.y_max = table_points.points[0].y;
+  }  
+  for (size_t i=1; i<table_points.points.size(); ++i) 
+  {
+    if (table_points.points[i].x<table.x_min && table_points.points[i].x>-3.0) table.x_min = table_points.points[i].x;
+    if (table_points.points[i].x>table.x_max && table_points.points[i].x< 3.0) table.x_max = table_points.points[i].x;
+    if (table_points.points[i].y<table.y_min && table_points.points[i].y>-3.0) table.y_min = table_points.points[i].y;
+    if (table_points.points[i].y>table.y_max && table_points.points[i].y< 3.0) table.y_max = table_points.points[i].y;
+  }
+
+  geometry_msgs::Pose table_pose;
+  tf::poseTFToMsg(table_plane_trans, table_pose);
+  table.pose.pose = table_pose;
+  table.pose.header = cloud_header;
+
+  return table;
+}
+
+
+
+/*! Assumes plane coefficients are of the form ax+by+cz+d=0, normalized */
+tf::Transform TableClusterDetector::getPlaneTransform (pcl::ModelCoefficients coeffs, double up_direction=1.0)
+{
+  ROS_ASSERT(coeffs.values.size() > 3);
+  double a = coeffs.values[0], b = coeffs.values[1], c = coeffs.values[2], d = coeffs.values[3];
+  //asume plane coefficients are normalized
+  btVector3 position(-a*d, -b*d, -c*d);
+  btVector3 z(a, b, c);
+  //make sure z points "up"
+  ROS_DEBUG("z.dot: %0.3f", z.dot(btVector3(0,0,1)));
+  ROS_DEBUG("in getPlaneTransform, z: %0.3f, %0.3f, %0.3f", z[0], z[1], z[2]);
+  if ( z.dot( btVector3(0, 0, up_direction) ) < 0)
+  {
+    z = -1.0 * z;
+    ROS_INFO("flipped z");
+  }
+  ROS_DEBUG("in getPlaneTransform, z: %0.3f, %0.3f, %0.3f", z[0], z[1], z[2]);
+
+  //try to align the x axis with the x axis of the original frame
+  //or the y axis if z and x are too close too each other
+  btVector3 x(1, 0, 0);
+  if ( fabs(z.dot(x)) > 1.0 - 1.0e-4) x = btVector3(0, 1, 0);
+  btVector3 y = z.cross(x).normalized();
+  x = y.cross(z).normalized();
+
+  btMatrix3x3 rotation;
+  rotation[0] = x;  // x
+  rotation[1] = y;  // y
+  rotation[2] = z;  // z
+  rotation = rotation.transpose();
+  btQuaternion orientation;
+  rotation.getRotation(orientation);
+  return tf::Transform(orientation, position);
+}
+
+template <typename PointT> 
+bool TableClusterDetector::getPlanePoints (const pcl::PointCloud<PointT> &table, 
+         const tf::Transform& table_plane_trans,
+         sensor_msgs::PointCloud &table_points)
+{
+  // Prepare the output
+  table_points.header = table.header;
+  table_points.points.resize (table.points.size ());
+  for (size_t i = 0; i < table.points.size (); ++i)
+  {
+    table_points.points[i].x = table.points[i].x;
+    table_points.points[i].y = table.points[i].y;
+    table_points.points[i].z = table.points[i].z;
+  }
+
+  // Transform the data
+  tf::TransformListener listener;
+  tf::StampedTransform table_pose_frame(table_plane_trans, table.header.stamp, 
+                                        table.header.frame_id, "table_frame");
+  listener.setTransform(table_pose_frame);
+  std::string error_msg;
+  if (!listener.canTransform("table_frame", table_points.header.frame_id, table_points.header.stamp, &error_msg))
+  {
+    ROS_ERROR("Can not transform point cloud from frame %s to table frame; error %s", 
+        table_points.header.frame_id.c_str(), error_msg.c_str());
+    return false;
+  }
+  try
+  {
+    listener.transformPointCloud("table_frame", table_points, table_points);
+  }
+  catch (tf::TransformException ex)
+  {
+    ROS_ERROR("Failed to transform point cloud from frame %s into table_frame; error %s", 
+        table_points.header.frame_id.c_str(), ex.what());
+    return false;
+  }
+  table_points.header.stamp = table.header.stamp;
+  table_points.header.frame_id = "table_frame";
+  return true;
+}
+
+void TableClusterDetector::publishTable(const Table & table) {
+  visualization_msgs::Marker tableMarker = MarkerGenerator::getTableMarker(table.x_min, table.x_max,
+      table.y_min, table.y_max);
+  tableMarker.header = table.pose.header;
+  tableMarker.pose = table.pose.pose;
+  tableMarker.ns = "tabletop_node";
+  tableMarker.id = current_marker_id_++;
+  marker_pub.publish(tableMarker);
 }

@@ -5,8 +5,9 @@
 #include <pcl/point_cloud.h>
 #include <Eigen/Core>
 
-typedef pcl::PointXYZRGB Point;
-typedef pcl::PointCloud<Point> PointCloud;
-typedef Eigen::Matrix4f AffineTransform;
-
+namespace cse481 {
+  typedef pcl::PointXYZRGB Point;
+  typedef pcl::PointCloud<Point> PointCloud;
+  typedef Eigen::Matrix4f AffineTransform;
+}
 #endif

@@ -32,6 +32,11 @@ class RpcHandler : virtual public RpcIf {
     printf("getObjects\n");
   }
 
+  void locateNao(Point& _return) {
+    // Your implementation goes here
+    printf("locateNao\n");
+  }
+
 };
 
 int main(int argc, char **argv) {

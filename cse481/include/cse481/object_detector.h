@@ -7,6 +7,8 @@
 #include "cse481/typedefs.h"
 #include "cse481/template_aligner.h"
 
+using namespace cse481;
+
 // Holds an object template and name
 class ObjectTemplate {
   public:

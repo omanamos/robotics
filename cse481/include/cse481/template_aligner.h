@@ -7,6 +7,8 @@
 #include "pcl/registration/ia_ransac.h"
 #include "cse481/typedefs.h"
 
+using namespace cse481;
+
 class FeatureCloud
 {
   public:
@@ -180,6 +182,7 @@ class TemplateAligner
       for (size_t i = 0; i < results.size (); ++i)
       {
         const Result &r = results[i];
+        ROS_WARN("Fitness for result %zd: %f", i, r.fitness_score);
         if (r.fitness_score < lowest_score)
         {
           lowest_score = r.fitness_score;
