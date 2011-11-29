@@ -38,7 +38,9 @@
 
 #include <vector>
 #include <visualization_msgs/Marker.h>
+#include <std_msgs/ColorRGBA.h>
 
+#include "cse481/typedefs.h"
 //! A convenience class for generating markers based on various clustering and fitting data
 /*! Just a place to group all the different debug marker generators
   so they don't polute other classes.
@@ -47,6 +49,8 @@ class MarkerGenerator {
  public:
   //! Create a line strip marker that goes around a detected table
   static visualization_msgs::Marker getTableMarker(float xmin, float xmax, float ymin, float ymax);
+
+  static visualization_msgs::Marker getCloudMarker(const cse481::PointCloud& cloud, const std_msgs::ColorRGBA &color);
 };
 
 #endif

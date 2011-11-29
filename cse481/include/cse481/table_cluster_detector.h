@@ -26,51 +26,51 @@ class TableClusterDetector
   typedef pcl::KdTree<Point>::Ptr KdTreePtr;
 
   public:
-    // PCL objects
-    KdTreePtr normals_tree_, clusters_tree_;
-    pcl::PassThrough<Point> pass_;
-    pcl::VoxelGrid<Point> grid_, grid_objects_;
-    pcl::NormalEstimation<Point, pcl::Normal> n3d_;
-    pcl::SACSegmentationFromNormals<Point, pcl::Normal> seg_;
-    pcl::ProjectInliers<Point> proj_;
-    pcl::ConvexHull<Point> hull_;
-    pcl::ExtractPolygonalPrismData<Point> prism_;
-    pcl::EuclideanClusterExtraction<Point> cluster_;
+  // PCL objects
+  KdTreePtr normals_tree_, clusters_tree_;
+  pcl::PassThrough<Point> pass_;
+  pcl::VoxelGrid<Point> grid_, grid_objects_;
+  pcl::NormalEstimation<Point, pcl::Normal> n3d_;
+  pcl::SACSegmentationFromNormals<Point, pcl::Normal> seg_;
+  pcl::ProjectInliers<Point> proj_;
+  pcl::ConvexHull<Point> hull_;
+  pcl::ExtractPolygonalPrismData<Point> prism_;
+  pcl::EuclideanClusterExtraction<Point> cluster_;
 
-    ros::Publisher marker_pub;
-    int current_marker_id_;
-    double downsample_leaf_, downsample_leaf_objects_;
-    int k_;
-    double min_z_bounds_, max_z_bounds_;
-    double sac_distance_threshold_;
-    double normal_distance_weight_;
+  ros::Publisher marker_pub;
+  int current_marker_id_;
+  double downsample_leaf_, downsample_leaf_objects_;
+  int k_;
+  double min_z_bounds_, max_z_bounds_;
+  double sac_distance_threshold_;
+  double normal_distance_weight_;
 
-    // Min/Max height from the table plane object points will be considered from/to
-    double object_min_height_, object_max_height_;
+  // Min/Max height from the table plane object points will be considered from/to
+  double object_min_height_, object_max_height_;
 
-    // Object cluster tolerance and minimum cluster size
-    double object_cluster_tolerance_, object_cluster_min_size_;
+  // Object cluster tolerance and minimum cluster size
+  double object_cluster_tolerance_, object_cluster_min_size_;
 
-    Table table_;
+  Table table_;
 
-    TableClusterDetector ();
+  TableClusterDetector ();
 
-    std::vector<PointCloud> findTableClusters(const sensor_msgs::PointCloud2 &scene);
+  std::vector<PointCloud> findTableClusters(const sensor_msgs::PointCloud2 &scene);
 
-    template <class PointCloudType>
-      Table computeTable(std_msgs::Header cloud_header, const tf::Transform &table_plane_trans, 
-                                  const PointCloudType &table_points);
-
-
-    tf::Transform getPlaneTransform (pcl::ModelCoefficients coeffs, double up_direction);
-
-    template <typename PointT> 
-      bool getPlanePoints (const pcl::PointCloud<PointT> &table, 
-          const tf::Transform& table_plane_trans,
-          sensor_msgs::PointCloud &table_points);
+  template <class PointCloudType>
+    Table computeTable(std_msgs::Header cloud_header, const tf::Transform &table_plane_trans, 
+        const PointCloudType &table_points);
 
 
-    void publishTable(const Table & table);
+  tf::Transform getPlaneTransform (pcl::ModelCoefficients coeffs, double up_direction);
+
+  template <typename PointT> 
+    bool getPlanePoints (const pcl::PointCloud<PointT> &table, 
+        const tf::Transform& table_plane_trans,
+        sensor_msgs::PointCloud &table_points);
+
+
+  void publishTable(const Table & table);
 };
 
 #endif

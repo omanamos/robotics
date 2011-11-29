@@ -1,0 +1,8 @@
+<launch>
+  <include file="$(find openni_launch)/launch/kinect_frames.launch" />
+  <node name="sim_data" pkg="pcl_ros" type="pcd_to_pointcloud" 
+    args="$(find cse481)/test_data/scene.pcd 0.5" >
+    <param name="frame_id" value="/camera_rgb_optical_frame" />
+  </node>
+  <node name="rviz" pkg="rviz" type="rviz" />
+</launch>

@@ -33,13 +33,13 @@
 
 // Author(s): Marius Muja and Matei Ciocarlie
 
+#include <cstdlib>
+#include <geometry_msgs/Pose.h>
+#include <std_msgs/ColorRGBA.h>
+#include <tf/transform_datatypes.h>
 #include "cse481/marker_generator.h"
 #include "cse481/Table.h"
-
-#include <geometry_msgs/Pose.h>
-
-#include <tf/transform_datatypes.h>
-
+#include "cse481/typedefs.h"
 /*! The point cloud is a set of points belonging to the plane, in the plane coordinate system
   (with the origin in the plane and the z axis normal to the plane).
 
@@ -94,5 +94,42 @@ visualization_msgs::Marker MarkerGenerator::getTableMarker(float xmin, float xma
   return marker;
 }
 
+visualization_msgs::Marker MarkerGenerator::getCloudMarker(
+    const cse481::PointCloud& cloud, 
+    const std_msgs::ColorRGBA& color)
+{
+  static bool first_time = true;
+  if (first_time) {
+    srand ( time(NULL) );
+    first_time = false;
+  }
 
+  //create the marker
+  visualization_msgs::Marker marker;
+  marker.action = visualization_msgs::Marker::ADD;
+  marker.lifetime = ros::Duration();
 
+  marker.type = visualization_msgs::Marker::POINTS;
+  marker.scale.x = 0.002;
+  marker.scale.y = 0.002;
+  marker.scale.z = 1.0;
+
+  if (color.a == 0.0) {
+    marker.color.r = ((double)rand())/RAND_MAX;
+    marker.color.g = ((double)rand())/RAND_MAX;
+    marker.color.b = ((double)rand())/RAND_MAX;
+    marker.color.a = 1.0;
+  } else {
+    marker.color = color;
+  }
+  for(size_t i=0; i<cloud.points.size(); i++) {
+    geometry_msgs::Point p;
+    p.x = cloud.points[i].x;
+    p.y = cloud.points[i].y;
+    p.z = cloud.points[i].z;
+    marker.points.push_back(p);
+  }
+
+  //the caller must decide the header; we are done here
+  return marker;
+}

@@ -45,28 +45,28 @@
 
 #include <boost/foreach.hpp>
 #include <ros/ros.h>
-#include "pcl/point_types.h"
+#include <pcl/point_types.h>
 
-#include "pcl/io/pcd_io.h"
-#include "pcl/filters/voxel_grid.h"
-#include "pcl/filters/passthrough.h"
-#include "pcl/filters/extract_indices.h"
-#include "pcl/features/normal_3d.h"
-#include "pcl/kdtree/kdtree.h"
-#include "pcl/kdtree/kdtree_flann.h"
-#include "pcl/kdtree/organized_data.h"
-#include "pcl/sample_consensus/method_types.h"
-#include "pcl/sample_consensus/model_types.h"
-#include "pcl/segmentation/sac_segmentation.h"
-#include "pcl/filters/project_inliers.h"
-#include "pcl/surface/convex_hull.h"
-#include "pcl/segmentation/extract_polygonal_prism_data.h"
-#include "pcl/segmentation/extract_clusters.h"
+#include <pcl/io/pcd_io.h>
+#include <pcl/filters/voxel_grid.h>
+#include <pcl/filters/passthrough.h>
+#include <pcl/filters/extract_indices.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/kdtree/kdtree.h>
+#include <pcl/kdtree/kdtree_flann.h>
+#include <pcl/kdtree/organized_data.h>
+#include <pcl/sample_consensus/method_types.h>
+#include <pcl/sample_consensus/model_types.h>
+#include <pcl/segmentation/sac_segmentation.h>
+#include <pcl/filters/project_inliers.h>
+#include <pcl/surface/convex_hull.h>
+#include <pcl/segmentation/extract_polygonal_prism_data.h>
+#include <pcl/segmentation/extract_clusters.h>
 #include <tf/transform_listener.h>
 // ROS messages
 #include <sensor_msgs/PointCloud2.h>
-#include "pcl/PointIndices.h"
-#include "pcl/ModelCoefficients.h"
+#include <pcl/PointIndices.h>
+#include <pcl/ModelCoefficients.h>
 
 #include "cse481/table_cluster_detector.h"
 #include "cse481/marker_generator.h"
@@ -74,8 +74,8 @@
 TableClusterDetector::TableClusterDetector ()
 {
   // ---[ Create all PCL objects and set their parameters
-      ros::NodeHandle n;
-      marker_pub = n.advertise<visualization_msgs::Marker>("labels", 10);
+  ros::NodeHandle n;
+  marker_pub = n.advertise<visualization_msgs::Marker>("labels", 10);
 
   // Filtering parameters
   downsample_leaf_ = 0.01;                          // 1cm voxel size by default
@@ -122,7 +122,7 @@ TableClusterDetector::TableClusterDetector ()
   proj_.setModelType (pcl::SACMODEL_NORMAL_PLANE);
 
   // Consider objects starting at 1cm from the table and ending at 0.5m
-  object_min_height_ = 0.01;
+  object_min_height_ = 0.02;
   object_max_height_ = 0.5;
   //nh_.getParam ("object_min_height", object_min_height_);
   //nh_.getParam ("object_max_height", object_max_height_);

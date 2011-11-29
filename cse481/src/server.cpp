@@ -137,14 +137,15 @@ class RpcHandler : virtual public RpcIf {
         pcl::compute3DCentroid(cloud, centroid);
 
         communication::Point avg;
-        /*
+        
         avg.x = centroid(0);
         avg.y = centroid(1);
         avg.z = centroid(2);
-        */
+        /*
         avg.x = 1.0;
         avg.x = 0.5;
         avg.z = 0.0;
+        */
         c.average = avg;
         _return.push_back(c);
       }
@@ -196,14 +197,19 @@ class RpcHandler : virtual public RpcIf {
     }
 
 
-    void publishMatches(const std::vector<ObjectMatch> &matches, const std_msgs::ColorRGBA &color) {
+    void publishMatches(const std::vector<ObjectMatch> &matches, 
+        const std_msgs::ColorRGBA &color) {
       BOOST_FOREACH(const ObjectMatch &m, matches) {
         cse481::PointCloud pc;
         pcl::transformPointCloud(m.getTemplate().getModel(), pc, m.getTransformation());
-        sensor_msgs::PointCloud2 pc_msg;
-        pcl::toROSMsg(pc, pc_msg);
-        pc_msg.header.frame_id = frame_id;
-        cloud_pub.publish(pc_msg);
+        visualization_msgs::Marker cloud_marker = 
+          MarkerGenerator::getCloudMarker(pc, color);
+        cloud_marker.header.frame_id = frame_id;
+        cloud_marker.ns = "matches";
+        cloud_marker.header.stamp = ros::Time::now();
+        cloud_marker.id = current_marker_id_++;
+        cloud_marker.lifetime = ros::Duration();
+        marker_pub.publish(cloud_marker);
         visualization_msgs::Marker mk = getTextMarker(m.getTemplate().getName(), 
             frame_id, m.getTransformation(), color);
         marker_pub.publish(mk);
