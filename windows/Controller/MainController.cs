@@ -17,7 +17,8 @@ namespace Controller
     public class MainController
     {
         public static readonly String ACTION_LIB_PATH = "temp";
-        public static readonly String NAO_IP = "127.0.0.1";
+        //public static readonly String NAO_IP = "127.0.0.1";
+        public static readonly String NAO_IP = "128.208.4.225";
 
         public enum State { waiting, start, confirmation, learn, getName, find };
         private State state;
@@ -25,6 +26,7 @@ namespace Controller
 
         private MainWindow window;
         private Rpc.Client thriftClient;
+        private TTransport thriftTransport;
 
         private VoiceRecogition recog;
         private VoiceRecogition interrupt;
@@ -38,8 +40,9 @@ namespace Controller
             this.nao = new NaoController(NAO_IP);
             this.lib = new ObjectLibrary();
 
-            TTransport transport = new TSocket("localhost", 9090);
-            TProtocol protocol = new TBinaryProtocol(transport);
+            this.thriftTransport = new TSocket("localhost", 9090);
+            thriftTransport.Open();
+            TProtocol protocol = new TBinaryProtocol(thriftTransport);
             this.thriftClient = new Rpc.Client(protocol);
 
             this.interrupt = new VoiceRecogition(CommandGrammarBuilder.buildInterruptGrammar(), this);
@@ -86,9 +89,13 @@ namespace Controller
                     if (prefix.Equals("identify"))
                     {
                         // TODO(namos): spawn this off in a thread so it can be stopped by interrupt
+
+                        // initial naoposition
+                        Point naoLocation = this.thriftClient.locateNao();
+
+
                         foreach (KeyValuePair<string, PointCloud> pair in lib.getKnownObjects())
                         {
-                            Point naoLocation = this.thriftClient.locateNao();
                             RecogObject obj = lib.getObject(pair.Key);
                             nao.walkToObject(pair.Value.Average, naoLocation);
                             nao.speak("this is a " + pair.Key);
@@ -99,6 +106,11 @@ namespace Controller
                                 props += property + ", ";
                             }
                             nao.speak(props + "and no more");
+
+                            naoLocation = pair.Value.Average;
+
+                            // waits for nao to finish speaking
+                            System.Threading.Thread.Sleep(4000);
                         }
                     }
                     else if (prefix.Equals("learn"))
@@ -176,6 +188,7 @@ namespace Controller
             this.save();
             this.recog.exit();
             this.nao.exit();
+            this.thriftTransport.Close();
             Environment.Exit(0);
         }
 

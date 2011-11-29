@@ -27,7 +27,7 @@ namespace Controller
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            controller = new MainController();
+            controller = new MainController(this);
         }
 
         private void Window_Closed(object sender, EventArgs e)

@@ -30,7 +30,7 @@ namespace Controller
                 currentAng = 0f;
                 proxy = new MotionProxy(ip, 9559);
                 tts = new TextToSpeechProxy(this.ip, 9559);
-                this.setStiffness(1.0f);
+                //this.setStiffness(1.0f);
             }
             catch (Exception e)
             {
@@ -66,6 +66,7 @@ namespace Controller
                                 time, time, time, time, time, time,
                                 time, time, time, time};
 
+            
             proxy.stiffnessInterpolation(joints, stiff, times);
         }
 
@@ -86,7 +87,20 @@ namespace Controller
                 currentAng = currentAng - 2 * PI;
             else if (currentAng < -1 * PI)
                 currentAng = currentAng + 2 * PI;
-            proxy.walkTo(p.X, p.Y, newZ);
+            //proxy.walkTo((float)p.X, (float)p.Y, newZ);
+            //proxy.walkTo(0.5f, 0.5f, /*1.5709f*/0);
+
+            
+
+            float x = (float) (obj.X - nao.X);
+            float y = (float) (obj.Y - nao.Y);
+
+            Console.WriteLine("nao x axis: " + nao.X);
+            Console.WriteLine("nao y axis: " + nao.Y);
+
+            proxy.walkTo(x, y, 0);
+            //proxy.walkTo(0.5f, 0.5f, /*1.5709f*/0);
+
         }
 
         // tranform the position of the object respects to Nao's facing direction

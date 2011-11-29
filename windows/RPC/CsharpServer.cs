@@ -15,12 +15,20 @@ namespace Communication
 
         public List<PointCloud> getObjects()
         {
-            return new List<PointCloud>();
+            List<PointCloud> l = new List<PointCloud>();
+            PointCloud pc = new PointCloud();
+            pc.Average.X = 0.5;
+            pc.Average.Y = 0.5;
+            pc.Average.Z = 0.0;
+            pc.Identifier = "box";
+            l.Add(pc);
+            return l;
         }
 
         public Point locateNao()
         {
-            return new Point();
+            Point p = new Point();
+            return p;
         }
 
     }
@@ -39,7 +47,7 @@ namespace Communication
                 // Use this for a multithreaded server
                 // server = new TThreadPoolServer(processor, serverTransport);
 
-                Console.WriteLine("Starting the server...");
+                Console.WriteLine("Starting the server.blah..");
                 server.Serve();
             }
             catch (Exception x)
@@ -47,6 +55,11 @@ namespace Communication
                 Console.WriteLine(x.StackTrace);
             }
             Console.WriteLine("done.");
+        }
+
+        static void main(String[] args)
+        {
+            Start();
         }
     }
 }
