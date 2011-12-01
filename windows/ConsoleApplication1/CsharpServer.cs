@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using Thrift.Server;
 using Thrift.Transport;
+using Communication;
 
-namespace Communication
+namespace ConsoleApplication1
 {
     public class RpcHanlder : Rpc.Iface
     {
