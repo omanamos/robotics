@@ -16,5 +16,6 @@ struct PointCloud {
 service Rpc {
    void ping(),
    list<PointCloud> getObjects(),
-   Point locateNao()
+   Point locateNao(),
+   update(string oldIdentifier, string newIdentifier)
 }
