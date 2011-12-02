@@ -31,6 +31,12 @@ namespace Communication
             return p;
         }
 
+        public bool update(string oldIdentifier, string newIdentifier)
+        {
+            Console.WriteLine("Updating: {1} to {2}.", oldIdentifier, newIdentifier);
+            return true;
+        }
+
     }
 
     public class CSharpServer

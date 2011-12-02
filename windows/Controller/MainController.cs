@@ -17,8 +17,8 @@ namespace Controller
     public class MainController
     {
         public static readonly String ACTION_LIB_PATH = "temp";
-        //public static readonly String NAO_IP = "127.0.0.1";
-        public static readonly String NAO_IP = "128.208.4.225";
+        public static readonly String NAO_IP = "127.0.0.1";
+        //public static readonly String NAO_IP = "128.208.4.225";
 
         public enum State { waiting, start, confirmation, learn, getName, find };
         private State state;
@@ -93,7 +93,6 @@ namespace Controller
                         // initial naoposition
                         Point naoLocation = this.thriftClient.locateNao();
 
-
                         foreach (KeyValuePair<string, PointCloud> pair in lib.getKnownObjects())
                         {
                             RecogObject obj = lib.getObject(pair.Key);
@@ -112,6 +111,7 @@ namespace Controller
                             // waits for nao to finish speaking
                             System.Threading.Thread.Sleep(4000);
                         }
+                        this.switchStates(State.start);
                     }
                     else if (prefix.Equals("learn"))
                     {
@@ -145,7 +145,7 @@ namespace Controller
                 case State.confirmation:
                     if (command.Equals("confirm yes"))
                     {
-                        if (this.lib.saveObject())
+                        if (this.lib.saveObject(this.thriftClient))
                         {
                             nao.speak("Ok, I've saved this object");
                             this.switchStates(State.learn);

@@ -10,6 +10,7 @@ struct Point {
 struct PointCloud {
   1: list<Point> points,
   2: Point average,
+  # default identifiers should start with and underscore
   3: string identifier
 }
 
@@ -17,5 +18,7 @@ service Rpc {
    void ping(),
    list<PointCloud> getObjects(),
    Point locateNao(),
-   update(string oldIdentifier, string newIdentifier)
+   
+   # return true if updated, false if you don't know about oldIdentifier
+   bool update(1:string oldIdentifier, 2:string newIdentifier)
 }

@@ -13,8 +13,8 @@ namespace DataStore
     public class ObjectLibrary : ISerializable
     {
         private SerializableDictionary<string, RecogObject> objects;
-        private SerializableDictionary<string, PointCloud> knownPointClouds;
-        private HashSet<PointCloud> unknownPointClouds;
+        private Dictionary<string, PointCloud> knownPointClouds;
+        private Dictionary<string, PointCloud> unknownPointClouds;
         private SerializableDictionary<string, List<RecogObject>> lookupByProperty;
 
         private PointCloud curLearning;
@@ -24,8 +24,8 @@ namespace DataStore
         {
             this.objects = new SerializableDictionary<string, RecogObject>();
             this.lookupByProperty = new SerializableDictionary<string, List<RecogObject>>();
-            this.knownPointClouds = new SerializableDictionary<string, PointCloud>();
-            this.unknownPointClouds = new HashSet<PointCloud>();
+            this.knownPointClouds = new Dictionary<string, PointCloud>();
+            this.unknownPointClouds = new Dictionary<string, PointCloud>();
 
             // hard coded to recognize for demo milestone 2
             // from saveobject method:
@@ -60,13 +60,13 @@ namespace DataStore
             this.knownPointClouds.Clear();
             foreach (PointCloud pc in clouds)
             {
-                if (pc.Identifier != null)
+                if (pc.Identifier.StartsWith("_"))
                 {
-                    this.knownPointClouds[pc.Identifier] = pc;
+                    this.unknownPointClouds[pc.Identifier] = pc;
                 }
                 else
                 {
-                    this.unknownPointClouds.Add(pc);
+                    this.knownPointClouds[pc.Identifier] = pc;
                 }
             }
         }
@@ -79,7 +79,7 @@ namespace DataStore
             }
             else
             {
-                this.curLearning = this.unknownPointClouds.FirstOrDefault();
+                this.curLearning = this.unknownPointClouds.FirstOrDefault().Value;
                 return this.curLearning;
             }
         }
@@ -89,7 +89,7 @@ namespace DataStore
             this.curLearningName = s;
         }
 
-        public bool saveObject()
+        public bool saveObject(Rpc.Client client)
         {
             if (this.curLearning == null)
             {
@@ -97,12 +97,21 @@ namespace DataStore
             }
             else
             {
-                this.unknownPointClouds.Remove(this.curLearning);
-                this.knownPointClouds[this.curLearningName] = this.curLearning;
-                RecogObject obj = new RecogObject(this.curLearningName);
-                this.objects[this.curLearningName] = obj;
-                this.curLearning = null;
-                return true;
+                // Send updated identifier to through thrift
+                if (client.update(this.curLearning.Identifier, this.curLearningName))
+                {
+                    this.unknownPointClouds.Remove(this.curLearning.Identifier);
+                    this.curLearning.Identifier = this.curLearningName;
+                    this.knownPointClouds[this.curLearningName] = this.curLearning;
+                    RecogObject obj = new RecogObject(this.curLearningName);
+                    this.objects[this.curLearningName] = obj;
+                    this.curLearning = null;
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
         }
 
@@ -132,9 +141,9 @@ namespace DataStore
             return this.lookupByProperty.Keys;
         }
 
-        public HashSet<PointCloud> getUnknownObjects()
+        public Dictionary<string, PointCloud>.ValueCollection getUnknownObjects()
         {
-            return this.unknownPointClouds;
+            return this.unknownPointClouds.Values;
         }
 
         public bool hasProperty(string property)

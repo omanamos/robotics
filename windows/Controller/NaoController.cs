@@ -29,12 +29,19 @@ namespace Controller
                 this.ip = ip;
                 currentAng = 0f;
                 proxy = new MotionProxy(ip, 9559);
-                tts = new TextToSpeechProxy(this.ip, 9559);
+                if (this.ip != "127.0.0.1")
+                {
+                    tts = new TextToSpeechProxy(this.ip, 9559);
+                }
+                else
+                {
+                    tts = null;
+                }
                 //this.setStiffness(1.0f);
             }
             catch (Exception e)
             {
-                Console.Out.WriteLine("HeadPanning.Connect exception: " + e);
+                Console.Out.WriteLine("Connect exception: " + e);
             }
         }
 
@@ -67,7 +74,7 @@ namespace Controller
                                 time, time, time, time};
 
             
-            proxy.stiffnessInterpolation(joints, stiff, times);
+            proxy.stiffnessInterpolation((Object)joints, (Object)stiff, (Object)times);
         }
 
 
@@ -89,8 +96,6 @@ namespace Controller
                 currentAng = currentAng + 2 * PI;
             //proxy.walkTo((float)p.X, (float)p.Y, newZ);
             //proxy.walkTo(0.5f, 0.5f, /*1.5709f*/0);
-
-            
 
             float x = (float) (obj.X - nao.X);
             float y = (float) (obj.Y - nao.Y);
@@ -115,7 +120,10 @@ namespace Controller
 
         public void speak(String context)
         {
-            tts.say(context);
+            if (tts != null)
+            {
+                tts.say(context);
+            }
         }
     }
 }

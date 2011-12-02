@@ -27,7 +27,7 @@ namespace VoiceRecog
                     this.grammar = buildStartGrammar(lib);
                     break;
                 case MainController.State.learn:
-                    this.grammar = buildLearnGrammar();
+                    this.grammar = null;
                     break;
                 case MainController.State.find:
                     this.grammar = buildFindGrammar();
@@ -101,12 +101,6 @@ namespace VoiceRecog
             topLevel.Add(propertyGrammar);
             */
             builder.Append(topLevel);
-            return new Grammar(builder);
-        }
-
-        private Grammar buildLearnGrammar()
-        {
-            GrammarBuilder builder = new GrammarBuilder();
             return new Grammar(builder);
         }
 

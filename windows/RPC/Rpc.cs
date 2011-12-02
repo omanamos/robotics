@@ -19,6 +19,7 @@ namespace Communication
       void ping();
       List<PointCloud> getObjects();
       Point locateNao();
+      bool update(string oldIdentifier, string newIdentifier);
     }
 
     public class Client : Iface {
@@ -139,6 +140,40 @@ namespace Communication
         throw new TApplicationException(TApplicationException.ExceptionType.MissingResult, "locateNao failed: unknown result");
       }
 
+      public bool update(string oldIdentifier, string newIdentifier)
+      {
+        send_update(oldIdentifier, newIdentifier);
+        return recv_update();
+      }
+
+      public void send_update(string oldIdentifier, string newIdentifier)
+      {
+        oprot_.WriteMessageBegin(new TMessage("update", TMessageType.Call, seqid_));
+        update_args args = new update_args();
+        args.OldIdentifier = oldIdentifier;
+        args.NewIdentifier = newIdentifier;
+        args.Write(oprot_);
+        oprot_.WriteMessageEnd();
+        oprot_.Transport.Flush();
+      }
+
+      public bool recv_update()
+      {
+        TMessage msg = iprot_.ReadMessageBegin();
+        if (msg.Type == TMessageType.Exception) {
+          TApplicationException x = TApplicationException.Read(iprot_);
+          iprot_.ReadMessageEnd();
+          throw x;
+        }
+        update_result result = new update_result();
+        result.Read(iprot_);
+        iprot_.ReadMessageEnd();
+        if (result.__isset.success) {
+          return result.Success;
+        }
+        throw new TApplicationException(TApplicationException.ExceptionType.MissingResult, "update failed: unknown result");
+      }
+
     }
     public class Processor : TProcessor {
       public Processor(Iface iface)
@@ -147,6 +182,7 @@ namespace Communication
         processMap_["ping"] = ping_Process;
         processMap_["getObjects"] = getObjects_Process;
         processMap_["locateNao"] = locateNao_Process;
+        processMap_["update"] = update_Process;
       }
 
       protected delegate void ProcessFunction(int seqid, TProtocol iprot, TProtocol oprot);
@@ -213,6 +249,19 @@ namespace Communication
         locateNao_result result = new locateNao_result();
         result.Success = iface_.locateNao();
         oprot.WriteMessageBegin(new TMessage("locateNao", TMessageType.Reply, seqid)); 
+        result.Write(oprot);
+        oprot.WriteMessageEnd();
+        oprot.Transport.Flush();
+      }
+
+      public void update_Process(int seqid, TProtocol iprot, TProtocol oprot)
+      {
+        update_args args = new update_args();
+        args.Read(iprot);
+        iprot.ReadMessageEnd();
+        update_result result = new update_result();
+        result.Success = iface_.update(args.OldIdentifier, args.NewIdentifier);
+        oprot.WriteMessageBegin(new TMessage("update", TMessageType.Reply, seqid)); 
         result.Write(oprot);
         oprot.WriteMessageEnd();
         oprot.Transport.Flush();
@@ -582,6 +631,205 @@ namespace Communication
         StringBuilder sb = new StringBuilder("locateNao_result(");
         sb.Append("Success: ");
         sb.Append(Success== null ? "<null>" : Success.ToString());
+        sb.Append(")");
+        return sb.ToString();
+      }
+
+    }
+
+
+    [Serializable]
+    public partial class update_args : TBase
+    {
+      private string _oldIdentifier;
+      private string _newIdentifier;
+
+      public string OldIdentifier
+      {
+        get
+        {
+          return _oldIdentifier;
+        }
+        set
+        {
+          __isset.oldIdentifier = true;
+          this._oldIdentifier = value;
+        }
+      }
+
+      public string NewIdentifier
+      {
+        get
+        {
+          return _newIdentifier;
+        }
+        set
+        {
+          __isset.newIdentifier = true;
+          this._newIdentifier = value;
+        }
+      }
+
+
+      public Isset __isset;
+      [Serializable]
+      public struct Isset {
+        public bool oldIdentifier;
+        public bool newIdentifier;
+      }
+
+      public update_args() {
+      }
+
+      public void Read (TProtocol iprot)
+      {
+        TField field;
+        iprot.ReadStructBegin();
+        while (true)
+        {
+          field = iprot.ReadFieldBegin();
+          if (field.Type == TType.Stop) { 
+            break;
+          }
+          switch (field.ID)
+          {
+            case 1:
+              if (field.Type == TType.String) {
+                OldIdentifier = iprot.ReadString();
+              } else { 
+                TProtocolUtil.Skip(iprot, field.Type);
+              }
+              break;
+            case 2:
+              if (field.Type == TType.String) {
+                NewIdentifier = iprot.ReadString();
+              } else { 
+                TProtocolUtil.Skip(iprot, field.Type);
+              }
+              break;
+            default: 
+              TProtocolUtil.Skip(iprot, field.Type);
+              break;
+          }
+          iprot.ReadFieldEnd();
+        }
+        iprot.ReadStructEnd();
+      }
+
+      public void Write(TProtocol oprot) {
+        TStruct struc = new TStruct("update_args");
+        oprot.WriteStructBegin(struc);
+        TField field = new TField();
+        if (OldIdentifier != null && __isset.oldIdentifier) {
+          field.Name = "oldIdentifier";
+          field.Type = TType.String;
+          field.ID = 1;
+          oprot.WriteFieldBegin(field);
+          oprot.WriteString(OldIdentifier);
+          oprot.WriteFieldEnd();
+        }
+        if (NewIdentifier != null && __isset.newIdentifier) {
+          field.Name = "newIdentifier";
+          field.Type = TType.String;
+          field.ID = 2;
+          oprot.WriteFieldBegin(field);
+          oprot.WriteString(NewIdentifier);
+          oprot.WriteFieldEnd();
+        }
+        oprot.WriteFieldStop();
+        oprot.WriteStructEnd();
+      }
+
+      public override string ToString() {
+        StringBuilder sb = new StringBuilder("update_args(");
+        sb.Append("OldIdentifier: ");
+        sb.Append(OldIdentifier);
+        sb.Append(",NewIdentifier: ");
+        sb.Append(NewIdentifier);
+        sb.Append(")");
+        return sb.ToString();
+      }
+
+    }
+
+
+    [Serializable]
+    public partial class update_result : TBase
+    {
+      private bool _success;
+
+      public bool Success
+      {
+        get
+        {
+          return _success;
+        }
+        set
+        {
+          __isset.success = true;
+          this._success = value;
+        }
+      }
+
+
+      public Isset __isset;
+      [Serializable]
+      public struct Isset {
+        public bool success;
+      }
+
+      public update_result() {
+      }
+
+      public void Read (TProtocol iprot)
+      {
+        TField field;
+        iprot.ReadStructBegin();
+        while (true)
+        {
+          field = iprot.ReadFieldBegin();
+          if (field.Type == TType.Stop) { 
+            break;
+          }
+          switch (field.ID)
+          {
+            case 0:
+              if (field.Type == TType.Bool) {
+                Success = iprot.ReadBool();
+              } else { 
+                TProtocolUtil.Skip(iprot, field.Type);
+              }
+              break;
+            default: 
+              TProtocolUtil.Skip(iprot, field.Type);
+              break;
+          }
+          iprot.ReadFieldEnd();
+        }
+        iprot.ReadStructEnd();
+      }
+
+      public void Write(TProtocol oprot) {
+        TStruct struc = new TStruct("update_result");
+        oprot.WriteStructBegin(struc);
+        TField field = new TField();
+
+        if (this.__isset.success) {
+          field.Name = "Success";
+          field.Type = TType.Bool;
+          field.ID = 0;
+          oprot.WriteFieldBegin(field);
+          oprot.WriteBool(Success);
+          oprot.WriteFieldEnd();
+        }
+        oprot.WriteFieldStop();
+        oprot.WriteStructEnd();
+      }
+
+      public override string ToString() {
+        StringBuilder sb = new StringBuilder("update_result(");
+        sb.Append("Success: ");
+        sb.Append(Success);
         sb.Append(")");
         return sb.ToString();
       }
