@@ -3,6 +3,7 @@
 #include <boost/foreach.hpp>
 
 #include "cse481/typedefs.h"
+#include "cse481/utils.h"
 #include "cse481/table_cluster_detector.h"
 #include "cse481/template_aligner.h"
 #include "cse481/object_detector.h"
@@ -22,7 +23,11 @@ void addUnknownObject(int & unknownCount, const PointCloud & cluster,
   std::stringstream ss;
   ss << "unknown" << unknownCount++;
   ObjectTemplate newTemplate(ss.str(), cluster);
-  ObjectMatch newMatch(newTemplate, Eigen::Matrix4f::Identity(), -1.0);
+  AffineTransform tr(Eigen::Matrix4f::Identity());
+  Eigen::Vector4f centroid;
+  pcl::compute3DCentroid(cluster, centroid);
+  tr.block<3,1>(0,3) = centroid.block<3,1>(0,0);
+  ObjectMatch newMatch(newTemplate, tr, -1.0);
   unrecognized_objects->push_back(newMatch);
 }
 
@@ -47,6 +52,8 @@ void ObjectDetector::detectObjectsInScene(const sensor_msgs::PointCloud2 &scene,
       // Find the best template alignment
       TemplateAligner::Result best_alignment;
       int best_index = template_align_.findBestAlignment(best_alignment);
+      std::cout << "Best Alignment:" << std::endl;
+      printTransform(best_alignment.final_transformation);
       // TODO: check the color as well
       // if fitness is above a threshold, it is a match
       if (best_alignment.fitness_score < fitness_match_threshold_) {

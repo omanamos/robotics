@@ -63,6 +63,7 @@
 #include <pcl/segmentation/extract_polygonal_prism_data.h>
 #include <pcl/segmentation/extract_clusters.h>
 #include <tf/transform_listener.h>
+#include <tf/transform_broadcaster.h>
 // ROS messages
 #include <sensor_msgs/PointCloud2.h>
 #include <pcl/PointIndices.h>
@@ -70,6 +71,7 @@
 
 #include "cse481/table_cluster_detector.h"
 #include "cse481/marker_generator.h"
+#include "cse481/utils.h"
 
 TableClusterDetector::TableClusterDetector ()
 {
@@ -91,8 +93,8 @@ TableClusterDetector::TableClusterDetector ()
   //nh_.getParam ("max_z_bounds", max_z_bounds_);
   grid_.setFilterLimits (min_z_bounds_, max_z_bounds_);
   pass_.setFilterLimits (min_z_bounds_, max_z_bounds_);
-  grid_.setDownsampleAllData (false);
-  grid_objects_.setDownsampleAllData (false);
+  //grid_.setDownsampleAllData (false);
+  //grid_objects_.setDownsampleAllData (false);
 
   normals_tree_ = boost::make_shared<pcl::KdTreeFLANN<Point> > ();
   clusters_tree_ = boost::make_shared<pcl::KdTreeFLANN<Point> > ();
@@ -153,8 +155,8 @@ std::vector<PointCloud> TableClusterDetector::findTableClusters(const sensor_msg
   PointCloud cloud_filtered;
   pass_.setInputCloud (cloudPtr);
   pass_.filter (cloud_filtered);
-  cloudPtr.reset(new PointCloud(cloud_filtered));
 
+  cloudPtr.reset(new PointCloud(cloud_filtered));
   // Downsample
   PointCloud cloud_downsampled;
   grid_.setInputCloud (cloudPtr);
@@ -175,6 +177,7 @@ std::vector<PointCloud> TableClusterDetector::findTableClusters(const sensor_msg
   n3d_.compute (cloud_normals);
   cloud_normalsPtr.reset(new pcl::PointCloud<pcl::Normal>(cloud_normals));
   ROS_INFO ("[TableObjectDetector] %d normals estimated.", (int)cloud_normals.points.size ());
+
 
   // ---[ Perform segmentation
   pcl::PointIndices table_inliers; pcl::PointIndices::Ptr table_inliersPtr;
@@ -202,7 +205,15 @@ std::vector<PointCloud> TableClusterDetector::findTableClusters(const sensor_msg
   ROS_INFO ("[TableObjectDetector::input_callback] Number of projected inliers: %d.", (int)table_projected.points.size ());
 
   sensor_msgs::PointCloud table_points;
-  tf::Transform table_plane_trans = getPlaneTransform (*table_coefficientsPtr, 1.0);
+  tf::Transform table_plane_trans = getPlaneTransform (*table_coefficientsPtr, -1.0);
+  std::string base_frame_id = scene.header.frame_id;
+  ROS_INFO("sending table transform");
+  ros::Rate r(10);
+  for (int i=0; i < 10; i++) {
+    tf_pub_.sendTransform(tf::StampedTransform(table_plane_trans, ros::Time::now(), 
+          base_frame_id, "table"));
+    r.sleep();
+  }
   //takes the points projected on the table and transforms them into the PointCloud message
   //while also transforming them into the table's coordinate system
   getPlanePoints<Point> (table_projected, table_plane_trans, table_points);
@@ -247,10 +258,16 @@ std::vector<PointCloud> TableClusterDetector::findTableClusters(const sensor_msg
   cluster_.setInputCloud (cloudPtr);
   cluster_.extract (clustersIndices);
   ROS_INFO ("[TableObjectDetector::input_callback] Number of clusters found matching the given constraints: %d.", (int)clustersIndices.size ());
-
+  
+  AffineTransform table_trans_eig;
+  cse481::tfToEigen(table_plane_trans, table_trans_eig);
+  table_trans_eig = table_trans_eig.inverse().eval();
+  PointCloud cloud_in_table_frame;
+  pcl::transformPointCloud(cloud_objects_downsampled, cloud_in_table_frame, table_trans_eig); 
+  // Clouds are now in table frame
   BOOST_FOREACH(pcl::PointIndices indices, clustersIndices) {
     PointCloud clusterCloud;
-    pcl::copyPointCloud(cloud_objects_downsampled, indices, clusterCloud);
+    pcl::copyPointCloud(cloud_in_table_frame, indices, clusterCloud);
     clusters.push_back(clusterCloud);
   }
 
