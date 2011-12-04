@@ -103,7 +103,7 @@ namespace Controller
             Console.WriteLine("nao x axis: " + nao.X);
             Console.WriteLine("nao y axis: " + nao.Y);
 
-            proxy.walkTo(x, y, 0);
+            proxy.post.walkTo(x, y, 0.0f);
             //proxy.walkTo(0.5f, 0.5f, /*1.5709f*/0);
 
         }
@@ -120,6 +120,7 @@ namespace Controller
 
         public void speak(String context)
         {
+            Console.WriteLine("Nao is saying: " + context);
             if (tts != null)
             {
                 tts.say(context);
@@ -128,7 +129,13 @@ namespace Controller
 
         public void stop()
         {
-            proxy.killAll();
+            proxy.post.killWalk();
+            proxy.post.walkTo(0.01f, 0.0f, 0.0f);
+        }
+
+        public bool isWalking()
+        {
+            return proxy.walkIsActive();
         }
     }
 }

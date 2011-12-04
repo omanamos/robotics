@@ -138,6 +138,11 @@ namespace DataStore
             return this.objects[identifier];
         }
 
+        public PointCloud getPointCloud(string identifier)
+        {
+            return this.knownPointClouds[identifier];
+        }
+
         public List<RecogObject> getObjects(string property)
         {
             return this.lookupByProperty[property];

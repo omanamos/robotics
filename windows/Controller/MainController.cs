@@ -18,8 +18,8 @@ namespace Controller
     public class MainController
     {
         public static readonly String ACTION_LIB_PATH = "temp";
-        public static readonly String NAO_IP = "127.0.0.1";
-        //public static readonly String NAO_IP = "128.208.4.225";
+        //public static readonly String NAO_IP = "127.0.0.1";
+        public static readonly String NAO_IP = "128.208.4.225";
 
         public enum State { waiting, start, confirmation, learn, getName, find };
         private volatile State state;
@@ -94,10 +94,13 @@ namespace Controller
             {
                 if (this.navThread != null)
                 {
+                    this.interrupt.exit();
                     Console.Write("Aborting...");
                     this.nav.stop();
-                    this.navThread.Join();
+                    this.navThread.Abort();
+                    this.navThread = null;
                     Console.WriteLine("Done!");
+                    this.interrupt.start();
                 }
                 else
                 {
@@ -178,6 +181,12 @@ namespace Controller
         {
             this.save();
             this.recog.exit();
+            if (this.navThread != null)
+            {
+                this.navThread.Abort();
+            }
+            this.interrupt.exit();
+            this.interruptThread.Abort();
             this.nao.exit();
             this.thriftTransport.Close();
             Environment.Exit(0);

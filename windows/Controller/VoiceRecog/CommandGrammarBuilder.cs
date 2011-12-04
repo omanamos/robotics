@@ -95,7 +95,8 @@ namespace VoiceRecog
             propertyGrammar.Append(new Choices(lib.getProperties().ToArray()));
             propertyGrammar.Append("objects");
             topLevel.Add(propertyGrammar);
-
+            
+            
             GrammarBuilder identifierGrammar = new GrammarBuilder("locate");
             identifierGrammar.Append(new Choices(lib.getIdentifiers().ToArray()));
             topLevel.Add(propertyGrammar);
