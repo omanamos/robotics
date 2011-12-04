@@ -90,17 +90,16 @@ namespace VoiceRecog
             topLevel.Add("learn unknown objects");
             this.strings.Add("learn unknown objects");
 
-            /*
+            
             GrammarBuilder propertyGrammar = new GrammarBuilder("find all");
             propertyGrammar.Append(new Choices(lib.getProperties().ToArray()));
             propertyGrammar.Append("objects");
             topLevel.Add(propertyGrammar);
             
-            
             GrammarBuilder identifierGrammar = new GrammarBuilder("locate");
             identifierGrammar.Append(new Choices(lib.getIdentifiers().ToArray()));
             topLevel.Add(propertyGrammar);
-            */
+            
             builder.Append(topLevel);
             return new Grammar(builder);
         }

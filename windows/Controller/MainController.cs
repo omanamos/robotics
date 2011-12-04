@@ -130,11 +130,19 @@ namespace Controller
                         }
                         else if (prefix.Equals("find"))
                         {
-                            // TODO(namos): have Nao find all ______ objects
+                            string property = removeNWords(command, 3);
+                            this.nav.setProperty(property);
+                            this.navThread = new Thread(this.nav.findObjects);
+                            this.navThread.Start();
+                            this.recog.exit();
                         }
                         else if (prefix.Equals("locate"))
                         {
-                            // TODO(namos): have Nao locate _______ object
+                            string property = removeNWords(command, 2);
+                            this.nav.setProperty(property);
+                            this.navThread = new Thread(this.nav.findObjects);
+                            this.navThread.Start();
+                            this.recog.exit();
                         }
                         else
                         {
@@ -142,6 +150,7 @@ namespace Controller
                         }
                         break;
                     case State.learn:
+                        // TODO(namos): add ability to learn properties
                         Console.WriteLine("FATAL ERROR: entered learn state on a command");
                         break;
                     case State.getName:
@@ -175,6 +184,17 @@ namespace Controller
                 }
             }
             Console.WriteLine("New State: " + this.state);
+        }
+
+        private string removeNWords(string str, int n)
+        {
+            string rtn = "";
+            string[] words = str.Split(' ');
+            for (int i = n; i < words.Length; i++)
+            {
+                rtn += words[i] + " ";
+            }
+            return rtn.Trim();
         }
 
         public void exit()

@@ -15,6 +15,8 @@ namespace Controller
         private NaoController nao;
         private ObjectLibrary lib;
         private Rpc.Client thriftClient;
+        private volatile string identifier;
+        private volatile string property;
         private volatile bool stopped;
 
         public NavigationController(MainController main, NaoController nao, ObjectLibrary lib, Rpc.Client thriftClient)
@@ -24,6 +26,16 @@ namespace Controller
             this.lib = lib;
             this.thriftClient = thriftClient;
             this.main = main;
+        }
+
+        public void setIdentifer(string identifier)
+        {
+            this.identifier = identifier;
+        }
+
+        public void setProperty(string property)
+        {
+            this.property = property;
         }
 
         public void identifyKnownObjects()
@@ -70,7 +82,7 @@ namespace Controller
             this.main.switchStates(MainController.State.start);
         }
 
-        public void findObjects(string property)
+        public void findObjects()
         {
             this.stopped = false;
             Point naoLocation = this.thriftClient.locateNao();
@@ -94,6 +106,30 @@ namespace Controller
         }
 
         private void cleanUpFind()
+        {
+            this.main.switchStates(MainController.State.start);
+        }
+
+        public void locateObject()
+        {
+            this.stopped = false;
+            RecogObject obj = this.lib.getObject(this.identifier);
+            Point naoLocation = this.thriftClient.locateNao();
+            PointCloud pc = this.lib.getPointCloud(obj.identifier);
+            nao.walkToObject(pc.Average, naoLocation);
+            while (!this.stopped && nao.isWalking()) { Thread.Sleep(1000); }
+            if (this.stopped) { cleanUpFind(); return; }
+            nao.speak("this is a " + obj.identifier);
+            if (this.stopped) { cleanUpFind(); return; }
+
+            naoLocation = pc.Average;
+
+            // waits for nao to finish speaking
+            System.Threading.Thread.Sleep(4000);
+            this.main.switchStates(MainController.State.start);
+        }
+
+        private void cleanUpLocate()
         {
             this.main.switchStates(MainController.State.start);
         }
