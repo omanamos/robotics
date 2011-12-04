@@ -20,14 +20,15 @@ namespace Controller
         private MotionProxy proxy;
         private TextToSpeechProxy tts;
 
-        private float currentAng;
+        private float predictedAng;
+
 
         public NaoController(string ip)
         {
             try
             {
                 this.ip = ip;
-                currentAng = 0f;
+                predictedAng = 0f;
                 proxy = new MotionProxy(ip, 9559);
                 if (this.ip != "127.0.0.1")
                 {
@@ -47,7 +48,8 @@ namespace Controller
 
         public void exit()
         {
-            this.setStiffness(0.0f);
+            
+            //this.setStiffness(0.0f);
         }
 
         private void setStiffness(float stiffness)
@@ -80,39 +82,70 @@ namespace Controller
 
         public void walkToObject(Communication.Point obj, Communication.Point nao)
         {
-            Communication.Point p = new Communication.Point();
-            p.X = nao.X - obj.X;
-            p.Y = nao.Y - obj.Y;
-            rotate(p, currentAng);
-            float newZ = (float)Math.Atan2(p.Y, p.X);
-            if (newZ > PI)
-                newZ = PI;
-            else if (newZ < -1 * PI)
-                newZ = -1 * PI;
-            currentAng += newZ;
-            if (currentAng > PI)
-                currentAng = currentAng - 2 * PI;
-            else if (currentAng < -1 * PI)
-                currentAng = currentAng + 2 * PI;
-            //proxy.walkTo((float)p.X, (float)p.Y, newZ);
-            //proxy.walkTo(0.5f, 0.5f, /*1.5709f*/0);
-
+            /*        
             float x = (float) (obj.X - nao.X);
             float y = (float) (obj.Y - nao.Y);
-
+            
             Console.WriteLine("nao x axis: " + nao.X);
             Console.WriteLine("nao y axis: " + nao.Y);
 
             proxy.post.walkTo(x, y, 0.0f);
-            //proxy.walkTo(0.5f, 0.5f, /*1.5709f*/0);
+            */  
 
+            Communication.Point p = new Communication.Point();
+            p.X = nao.X - obj.X;
+            p.Y = nao.Y - obj.Y;            
+            p.Z = getRightAng(nao.Z);
+
+            rotate(p);
+                        
+            float newZ = (float)Math.Atan2(p.Y, p.X);
+            if (newZ > PI)
+                newZ = PI;
+            else if (newZ < -1 * PI)
+                newZ = -1 * PI;            
+        
+            proxy.post.walkTo((float)p.X, (float)p.Y, newZ);
+
+            predictedAng = newZ + (float)p.Z;
+            if (predictedAng > PI)
+                predictedAng = predictedAng - 2 * PI;
+            else if (predictedAng < -1 * PI)
+                predictedAng = predictedAng + 2 * PI;
+        }
+
+        private double getRightAng(double currentAng)
+        {
+            double possibleAng;
+            if (currentAng >= PI / 2)
+                possibleAng = currentAng - PI / 2;
+            else
+                possibleAng = currentAng + PI / 2;
+
+            double currentAnginNao = converToNaoAng(currentAng);
+            double possibleAnginNao = converToNaoAng(possibleAng);
+
+            if (Math.Abs(predictedAng - currentAnginNao) > Math.Abs(predictedAng - possibleAnginNao))
+                return possibleAnginNao;
+            else
+                return currentAnginNao;
+        }
+
+
+        private double converToNaoAng(double ang)
+        {
+            if (ang >= PI / 2)
+                return PI - ang;
+            else
+                return ang;
         }
 
         // tranform the position of the object respects to Nao's facing direction
-        private void rotate(Communication.Point p, float rad)
+        private void rotate(Communication.Point p)
         {
             float x = (float)p.X;
             float y = (float)p.Y;
+            float rad = (float)p.Z;
 
             p.X = (float)(x * Math.Cos(rad) + y * Math.Sin(rad));
             p.Y = (float)(-1 * x * Math.Sin(rad) + y * Math.Cos(rad));

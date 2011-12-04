@@ -59,7 +59,7 @@ namespace VoiceRecog
         public static Grammar buildInterruptGrammar()
         {
             GrammarBuilder builder = new GrammarBuilder("nao");
-            builder.Append(new Choices(new string[] { "abort" }));
+            builder.Append(new Choices(new string[] { "abort", "exit" }));
             return new Grammar(builder);
         }
 
@@ -90,18 +90,37 @@ namespace VoiceRecog
             topLevel.Add("learn unknown objects");
             this.strings.Add("learn unknown objects");
 
-            
-            GrammarBuilder propertyGrammar = new GrammarBuilder("find all");
-            propertyGrammar.Append(new Choices(lib.getProperties().ToArray()));
-            propertyGrammar.Append("objects");
-            topLevel.Add(propertyGrammar);
-            
-            GrammarBuilder identifierGrammar = new GrammarBuilder("locate");
-            identifierGrammar.Append(new Choices(lib.getIdentifiers().ToArray()));
-            topLevel.Add(propertyGrammar);
+            string[] properties = lib.getProperties().ToArray();
+            if (properties.Length != 0)
+            {
+                GrammarBuilder propertyGrammar = new GrammarBuilder("find all");
+                propertyGrammar.Append(new Choices(properties));
+                propertyGrammar.Append("objects");
+                topLevel.Add(propertyGrammar);
+                this.strings.Add("find all {" + toString(properties) + "} objects");
+            }
+
+            string[] identifiers = lib.getIdentifiers().ToArray();
+            if (identifiers.Length != 0)
+            {
+                GrammarBuilder identifierGrammar = new GrammarBuilder("locate");
+                identifierGrammar.Append(new Choices(identifiers));
+                topLevel.Add(identifierGrammar);
+                this.strings.Add("locate {" + toString(identifiers) + "}");
+            }
             
             builder.Append(topLevel);
             return new Grammar(builder);
+        }
+
+        private string toString(string[] arr)
+        {
+            string rtn = "";
+            foreach (string s in arr)
+            {
+                rtn += s + ",";
+            }
+            return rtn.Substring(0, rtn.Length - 1);
         }
 
         private Grammar buildFindGrammar()

@@ -28,7 +28,7 @@ namespace Controller
             this.main = main;
         }
 
-        public void setIdentifer(string identifier)
+        public void setIdentifier(string identifier)
         {
             this.identifier = identifier;
         }
@@ -46,10 +46,10 @@ namespace Controller
             {
                 RecogObject obj = lib.getObject(pair.Key);
                 nao.walkToObject(pair.Value.Average, naoLocation);
-                while (!this.stopped && nao.isWalking()) { Thread.Sleep(1000); }
-                if (this.stopped) { cleanUpIdentify(); return; }
+                do { Thread.Sleep(1000); } while (!this.stopped && nao.isWalking());
+                if (this.stopped) { return; }
                 nao.speak("this is a " + pair.Key);
-                if (this.stopped) { cleanUpIdentify(); return; }
+                if (this.stopped) { return; }
                 string props = "";
                 foreach (string property in obj.getProperties())
                 {
@@ -59,26 +59,21 @@ namespace Controller
                 if (props.Length != 0)
                 {
                     nao.speak("it has the following properties");
-                    if (this.stopped) { cleanUpIdentify(); return; }
+                    if (this.stopped) { return; }
                     nao.speak(props + "and no more");
-                    if (this.stopped) { cleanUpIdentify(); return; }
+                    if (this.stopped) { return; }
                 }
                 else
                 {
                     nao.speak("I don't know anything about this object");
-                    if (this.stopped) { cleanUpIdentify(); return; }
+                    if (this.stopped) { return; }
                 }
 
-                naoLocation = pair.Value.Average;
+                naoLocation = this.thriftClient.locateNao();
 
                 // waits for nao to finish speaking
                 System.Threading.Thread.Sleep(4000);
             }
-            this.main.switchStates(MainController.State.start);
-        }
-
-        private void cleanUpIdentify()
-        {
             this.main.switchStates(MainController.State.start);
         }
 
@@ -90,23 +85,18 @@ namespace Controller
             {
                 PointCloud pc = this.lib.getPointCloud(obj.identifier);
                 nao.walkToObject(pc.Average, naoLocation);
-                while (!this.stopped && nao.isWalking()) { Thread.Sleep(1000); }
-                if (this.stopped) { cleanUpFind(); return; }
+                do { Thread.Sleep(1000); } while (!this.stopped && nao.isWalking());
+                if (this.stopped) { return; }
                 nao.speak("this is a " + obj.identifier);
-                if (this.stopped) { cleanUpFind(); return; }
+                if (this.stopped) { return; }
                 nao.speak("it has the property " + property);
-                if (this.stopped) { cleanUpFind(); return; }
+                if (this.stopped) { return; }
 
-                naoLocation = pc.Average;
+                naoLocation = this.thriftClient.locateNao();
 
                 // waits for nao to finish speaking
                 System.Threading.Thread.Sleep(4000);
             }
-            this.main.switchStates(MainController.State.start);
-        }
-
-        private void cleanUpFind()
-        {
             this.main.switchStates(MainController.State.start);
         }
 
@@ -117,20 +107,13 @@ namespace Controller
             Point naoLocation = this.thriftClient.locateNao();
             PointCloud pc = this.lib.getPointCloud(obj.identifier);
             nao.walkToObject(pc.Average, naoLocation);
-            while (!this.stopped && nao.isWalking()) { Thread.Sleep(1000); }
-            if (this.stopped) { cleanUpFind(); return; }
+            do { Thread.Sleep(1000); } while (!this.stopped && nao.isWalking());
+            if (this.stopped) { return; }
             nao.speak("this is a " + obj.identifier);
-            if (this.stopped) { cleanUpFind(); return; }
-
-            naoLocation = pc.Average;
+            if (this.stopped) { return; }
 
             // waits for nao to finish speaking
             System.Threading.Thread.Sleep(4000);
-            this.main.switchStates(MainController.State.start);
-        }
-
-        private void cleanUpLocate()
-        {
             this.main.switchStates(MainController.State.start);
         }
 
@@ -142,7 +125,7 @@ namespace Controller
             if (obj == null)
             {
                 nao.speak("I'm done learning");
-                if (this.stopped) { cleanUpLearn(); return; }
+                if (this.stopped) { return; }
                 this.main.switchStates(MainController.State.start);
             }
             else
@@ -150,18 +133,12 @@ namespace Controller
                 Console.WriteLine("learning: " + obj.Identifier);
                 Point naoLocation = this.thriftClient.locateNao();
                 nao.walkToObject(obj.Average, naoLocation);
-                while (!this.stopped && nao.isWalking()) { Thread.Sleep(1000); }
-                if (this.stopped) { cleanUpLearn(); return; }
+                do { Thread.Sleep(1000); } while (!this.stopped && nao.isWalking());
+                if (this.stopped) { return; }
                 nao.speak("what is this object called?");
-                if (this.stopped) { cleanUpLearn(); return; }
+                if (this.stopped) { return; }
                 this.main.switchStates(MainController.State.getName);
             }
-        }
-
-        private void cleanUpLearn()
-        {
-            this.lib.cancelLearning();
-            this.main.switchStates(MainController.State.start);
         }
 
         public void stop()

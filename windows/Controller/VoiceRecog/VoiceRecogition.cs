@@ -44,8 +44,15 @@ namespace VoiceRecog
 
         private void speechRecog_success(object sender, SpeechRecognizedEventArgs args)
         {
-            Console.WriteLine("Recognized: {0} - {1}", args.Result.Text, args.Result.Confidence);
-            controller.processCommand(args.Result.Text);
+            if (!args.Result.Text.Equals("nao abort") || args.Result.Confidence > 0.8f)
+            {
+                Console.WriteLine("Recognized: {0} - {1}", args.Result.Text, args.Result.Confidence);
+                controller.processCommand(args.Result.Text);
+            }
+            else
+            {
+                Console.WriteLine("Failed: {0} - {1}", args.Result.Text, args.Result.Confidence);
+            }
         }
 
         private void speechRecog_failure(object sender, SpeechRecognitionRejectedEventArgs args)

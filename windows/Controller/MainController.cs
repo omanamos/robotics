@@ -24,6 +24,7 @@ namespace Controller
         public enum State { waiting, start, confirmation, learn, getName, find };
         private volatile State state;
         private volatile State prevState;
+        private string prevCommand;
 
         private MainWindow window;
         private Rpc.Client thriftClient;
@@ -99,6 +100,8 @@ namespace Controller
                     this.nav.stop();
                     this.navThread.Abort();
                     this.navThread = null;
+                    this.lib.cancelLearning();
+                    this.switchStates(State.start);
                     Console.WriteLine("Done!");
                     this.interrupt.start();
                 }
@@ -107,6 +110,21 @@ namespace Controller
                     this.lib.cancelLearning();
                     this.switchStates(State.start);
                 }
+            }
+            else if (command.Equals("nao exit"))
+            {
+                if (this.navThread != null)
+                {
+                    this.interrupt.exit();
+                    Console.Write("Aborting...");
+                    this.nav.stop();
+                    this.navThread.Abort();
+                    this.navThread = null;
+                    this.lib.cancelLearning();
+                    Console.WriteLine("Done!");
+                    this.interrupt.start();
+                }
+                this.switchStates(State.confirmation);
             }
             else
             {
@@ -138,9 +156,9 @@ namespace Controller
                         }
                         else if (prefix.Equals("locate"))
                         {
-                            string property = removeNWords(command, 2);
-                            this.nav.setProperty(property);
-                            this.navThread = new Thread(this.nav.findObjects);
+                            string identifier = removeNWords(command, 2);
+                            this.nav.setIdentifier(identifier);
+                            this.navThread = new Thread(this.nav.locateObject);
                             this.navThread.Start();
                             this.recog.exit();
                         }
@@ -164,7 +182,12 @@ namespace Controller
                     case State.confirmation:
                         if (command.Equals("confirm yes"))
                         {
-                            if (this.lib.saveObject(this.thriftClient))
+                            if (this.prevCommand.Equals("nao exit"))
+                            {
+                                nao.speak("Goodbye");
+                                this.exit();
+                            } 
+                            else if (this.lib.saveObject(this.thriftClient))
                             {
                                 nao.speak("Ok, I've saved this object");
                                 this.switchStates(State.learn);
@@ -177,12 +200,20 @@ namespace Controller
                         }
                         else if (command.Equals("confirm no"))
                         {
-                            this.switchStates(State.getName);
-                            nao.speak("OK, what is it really called?");
+                            if (this.prevCommand.Equals("nao exit"))
+                            {
+                                this.switchStates(State.start);
+                            }
+                            else
+                            {
+                                this.switchStates(State.getName);
+                                nao.speak("OK, what is it really called?");
+                            }
                         }
                         break;
                 }
             }
+            this.prevCommand = command;
             Console.WriteLine("New State: " + this.state);
         }
 
@@ -219,7 +250,7 @@ namespace Controller
 
         private void save()
         {
-            this.lib.save(ACTION_LIB_PATH);
+            //this.lib.save(ACTION_LIB_PATH);
         }
     }
 }
