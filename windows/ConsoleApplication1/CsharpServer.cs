@@ -10,6 +10,33 @@ namespace ConsoleApplication1
     {
         private int unidentifiedCount = 2;
 
+        private Dictionary<string, PointCloud> map;
+        private PointCloud pc1;
+        private PointCloud pc2;
+
+        private int locateCallCount;
+
+        public RpcHanlder()
+        {
+            this.locateCallCount = 0;
+
+            pc1 = new PointCloud();
+            pc1.Average = new Point();
+            pc1.Average.X = 1.0;
+            pc1.Average.Y = 0.0;
+            pc1.Average.Z = 0.0;
+            pc1.Identifier = "_item1";
+            map[pc1.Identifier] = pc1;
+
+            pc2 = new PointCloud();
+            pc2.Average = new Point();
+            pc2.Average.X = 1.0;
+            pc2.Average.Y = 0.5;
+            pc2.Average.Z = 0.0;
+            pc2.Identifier = "_item2";
+            map[pc2.Identifier] = pc2;
+        }
+
         public void ping()
         {
             Console.WriteLine("ping()");
@@ -18,7 +45,7 @@ namespace ConsoleApplication1
         public List<PointCloud> getObjects()
         {
             List<PointCloud> l = new List<PointCloud>();
-
+            /*
             PointCloud pc = new PointCloud();
             pc.Average = new Point();
             pc.Average.X = 0.5;
@@ -45,9 +72,9 @@ namespace ConsoleApplication1
             else
             {
                 pc2.Identifier = "ball";
-            }
+            }*/
 
-            l.Add(pc);
+            l.Add(pc1);
             l.Add(pc2);
 
             return l;
@@ -56,13 +83,33 @@ namespace ConsoleApplication1
         public Point locateNao()
         {
             Point p = new Point();
+            if (locateCallCount == 0)
+            {
+                p.X = 0.0;
+                p.Y = 0.0;
+                p.Z = 0.0;
+            }
+            else if (locateCallCount == 1)
+            {
+                p.X = 1.0;
+                p.Y = 0.0;
+                p.Z = 0.0;
+            }
+            else
+            {
+                p.X = 1.0;
+                p.Y = 0.5;
+                p.Z = 1.57;
+            }
+            this.locateCallCount++;
             return p;
         }
 
         public bool update(string oldIdentifier, string newIdentifier)
         {
             Console.WriteLine("Updating: {0} to {1}.", oldIdentifier, newIdentifier);
-            unidentifiedCount -= 1;
+            PointCloud pc = this.map[oldIdentifier];
+            pc.Identifier = newIdentifier;
             return true;
         }
     }
