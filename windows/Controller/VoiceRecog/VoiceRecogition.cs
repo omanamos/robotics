@@ -15,15 +15,15 @@ namespace VoiceRecog
 
         public VoiceRecogition(MainController.State state, MainController controller)
         {
-            this.initialize(new CommandGrammarBuilder(state, controller.getLibrary()).getGrammar(), controller);
+            this.initialize(new CommandGrammarBuilder(state, controller.getLibrary()).getGrammar(), controller, true);
         }
 
         public VoiceRecogition(Grammar grammar, MainController controller)
         {
-            this.initialize(grammar, controller);
+            this.initialize(grammar, controller, false);
         }
 
-        private void initialize(Grammar grammar, MainController controller)
+        private void initialize(Grammar grammar, MainController controller, bool start)
         {
             if (grammar != null)
             {
@@ -35,7 +35,10 @@ namespace VoiceRecog
                 recogEng.SpeechRecognitionRejected += new EventHandler<SpeechRecognitionRejectedEventArgs>(
                     speechRecog_failure);
                 recogEng.LoadGrammar(grammar);
-                this.start();
+                if (start)
+                {
+                    this.start();
+                }
             }
         }
 

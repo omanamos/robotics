@@ -63,6 +63,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="NavigationController.cs" />
     <Compile Include="VoiceRecog\Template.cs" />
     <Compile Include="VoiceRecog\VoiceRecogition.cs">
       <SubType>Code</SubType>

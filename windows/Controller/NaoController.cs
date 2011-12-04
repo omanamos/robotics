@@ -125,5 +125,10 @@ namespace Controller
                 tts.say(context);
             }
         }
+
+        public void stop()
+        {
+            proxy.killAll();
+        }
     }
 }

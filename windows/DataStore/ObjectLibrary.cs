@@ -55,6 +55,12 @@ namespace DataStore
             }
         }
 
+        public void cancelLearning()
+        {
+            this.curLearning = null;
+            this.curLearningName = null;
+        }
+
         public void loadPointClouds(List<PointCloud> clouds)
         {
             this.knownPointClouds.Clear();
@@ -106,6 +112,7 @@ namespace DataStore
                     RecogObject obj = new RecogObject(this.curLearningName);
                     this.objects[this.curLearningName] = obj;
                     this.curLearning = null;
+                    this.curLearningName = null;
                     return true;
                 }
                 else
