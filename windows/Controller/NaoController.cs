@@ -90,28 +90,35 @@ namespace Controller
             Console.WriteLine("nao y axis: " + nao.Y);
 
             proxy.post.walkTo(x, y, 0.0f);
-            */  
+            */
+
+            
 
             Communication.Point p = new Communication.Point();
-            p.X = nao.X - obj.X;
-            p.Y = nao.Y - obj.Y;            
+            p.X = obj.X - nao.X;
+            p.Y = obj.Y - nao.Y;            
             p.Z = getRightAng(nao.Z);
 
             rotate(p);
                         
-            float newZ = (float)Math.Atan2(p.Y, p.X);
+            double newZ = Math.Atan2(p.Y, p.X);
             if (newZ > PI)
                 newZ = PI;
             else if (newZ < -1 * PI)
-                newZ = -1 * PI;            
-        
-            proxy.post.walkTo((float)p.X, (float)p.Y, newZ);
+                newZ = -1 * PI;
+            p.X = Math.Round(p.X, 2);
+            p.Y = Math.Round(p.Y, 2);
+            newZ = Math.Round(newZ, 2);
+            Console.WriteLine("Object: ({0}, {1}, {2}), Nao: ({3}, {4}, {5}), New Loc: ({6}, {7}, {8}) @{9}",
+                obj.X, obj.Y, obj.Z, nao.X, nao.Y, nao.Z, p.X, p.Y, p.Z, newZ);
+            proxy.post.walkTo((float)p.X, (float)p.Y, (float)newZ);
 
-            predictedAng = newZ + (float)p.Z;
+            predictedAng = (float)newZ + (float)p.Z;
+            Console.WriteLine("Predicted Angle: " + predictedAng);
             if (predictedAng > PI)
-                predictedAng = predictedAng - 2 * PI;
+                predictedAng = predictedAng - PI;
             else if (predictedAng < -1 * PI)
-                predictedAng = predictedAng + 2 * PI;
+                predictedAng = predictedAng + PI;
         }
 
         private double getRightAng(double currentAng)

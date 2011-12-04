@@ -59,7 +59,7 @@ namespace VoiceRecog
         public static Grammar buildInterruptGrammar()
         {
             GrammarBuilder builder = new GrammarBuilder("nao");
-            builder.Append(new Choices(new string[] { "abort", "exit" }));
+            builder.Append(new Choices(new string[] { "abort" }));
             return new Grammar(builder);
         }
 

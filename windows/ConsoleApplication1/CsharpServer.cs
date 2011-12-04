@@ -8,7 +8,6 @@ namespace ConsoleApplication1
 {
     public class RpcHanlder : Rpc.Iface
     {
-        private int unidentifiedCount = 2;
 
         private Dictionary<string, PointCloud> map;
         private PointCloud pc1;
@@ -16,8 +15,10 @@ namespace ConsoleApplication1
 
         private int locateCallCount;
 
-        public RpcHanlder()
+        public void init()
         {
+            map = new Dictionary<string, PointCloud>();
+
             this.locateCallCount = 0;
 
             pc1 = new PointCloud();
@@ -102,6 +103,7 @@ namespace ConsoleApplication1
                 p.Z = 1.57;
             }
             this.locateCallCount++;
+            Console.WriteLine("Returning location of nao: ({0}, {1}, {2})", p.X, p.Y, p.Z);
             return p;
         }
 
@@ -121,6 +123,7 @@ namespace ConsoleApplication1
             try
             {
                 RpcHanlder handler = new RpcHanlder();
+                handler.init();
                 Rpc.Processor processor = new Rpc.Processor(handler);
                 TServerTransport serverTransport = new TServerSocket(9090);
                 TServer server = new TSimpleServer(processor, serverTransport);
