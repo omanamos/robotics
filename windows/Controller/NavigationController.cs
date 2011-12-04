@@ -147,6 +147,7 @@ namespace Controller
             }
             else
             {
+                Console.WriteLine("learning: " + obj.Identifier);
                 Point naoLocation = this.thriftClient.locateNao();
                 nao.walkToObject(obj.Average, naoLocation);
                 while (!this.stopped && nao.isWalking()) { Thread.Sleep(1000); }

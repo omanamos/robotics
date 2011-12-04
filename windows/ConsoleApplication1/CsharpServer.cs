@@ -8,6 +8,7 @@ namespace ConsoleApplication1
 {
     public class RpcHanlder : Rpc.Iface
     {
+        private int unidentifiedCount = 2;
 
         public void ping()
         {
@@ -23,14 +24,28 @@ namespace ConsoleApplication1
             pc.Average.X = 0.5;
             pc.Average.Y = -0.5;
             pc.Average.Z = 0.0;
-            pc.Identifier = "box";
+            if (unidentifiedCount >= 2)
+            {
+                pc.Identifier = "_box";
+            }
+            else
+            {
+                pc.Identifier = "box";
+            }
 
             PointCloud pc2 = new PointCloud();
             pc2.Average = new Point();
             pc2.Average.X = 0.5;
             pc2.Average.Y = 0.5;
             pc2.Average.Z = 0.0;
-            pc2.Identifier = "ball";
+            if (unidentifiedCount >= 1)
+            {
+                pc2.Identifier = "_ball";
+            }
+            else
+            {
+                pc2.Identifier = "ball";
+            }
 
             l.Add(pc);
             l.Add(pc2);
@@ -46,7 +61,8 @@ namespace ConsoleApplication1
 
         public bool update(string oldIdentifier, string newIdentifier)
         {
-            Console.WriteLine("Updating: {1} to {2}.", oldIdentifier, newIdentifier);
+            Console.WriteLine("Updating: {0} to {1}.", oldIdentifier, newIdentifier);
+            unidentifiedCount -= 1;
             return true;
         }
     }

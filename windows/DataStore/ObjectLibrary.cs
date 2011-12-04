@@ -32,6 +32,7 @@ namespace DataStore
             // this.knownPointClouds[this.curLearningName] = this.curLearning;
             // RecogObject obj = new RecogObject(this.curLearningName);
             // this.objects[this.curLearningName] = obj;
+            /*
             this.knownPointClouds.Add("box", new PointCloud());
             RecogObject obj = new RecogObject("box");
             this.objects["box"] = obj;
@@ -39,6 +40,7 @@ namespace DataStore
             this.knownPointClouds.Add("ball", new PointCloud());
             RecogObject obj2 = new RecogObject("ball");
             this.objects["ball"] = obj2;
+            */
 
         }
 
