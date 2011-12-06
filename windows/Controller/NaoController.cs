@@ -123,28 +123,12 @@ namespace Controller
 
         private double getRightAng(double currentAng)
         {
-            double possibleAng;
-            if (currentAng >= PI / 2)
-                possibleAng = currentAng - PI / 2;
+            double possibleAng = -1 * currentAng;
+
+            if (Math.Abs(predictedAng - possibleAng) > Math.Abs(predictedAng - currentAng))
+                return currentAng;
             else
-                possibleAng = currentAng + PI / 2;
-
-            double currentAnginNao = converToNaoAng(currentAng);
-            double possibleAnginNao = converToNaoAng(possibleAng);
-
-            if (Math.Abs(predictedAng - currentAnginNao) > Math.Abs(predictedAng - possibleAnginNao))
-                return possibleAnginNao;
-            else
-                return currentAnginNao;
-        }
-
-
-        private double converToNaoAng(double ang)
-        {
-            if (ang >= PI / 2)
-                return PI - ang;
-            else
-                return ang;
+                return possibleAng;
         }
 
         // tranform the position of the object respects to Nao's facing direction
