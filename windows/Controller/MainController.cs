@@ -21,9 +21,10 @@ namespace Controller
         public static readonly String NAO_IP = "127.0.0.1";
         //public static readonly String NAO_IP = "128.208.4.14";
 
-        public enum State { waiting, start, confirmation, learn, getName, find };
+        public enum State { waiting, start, confirmation, learn, getName, getProperties, find };
         private volatile State state;
         private volatile State prevState;
+        private volatile State lastChangedState;
         private string prevCommand;
 
         private MainWindow window;
@@ -73,6 +74,10 @@ namespace Controller
                     window.prefix.Text = builder.getPrefix();
                 }));
 
+            if (state != this.state)
+            {
+                this.lastChangedState = state;
+            }
             this.prevState = this.state;
             this.state = state;
             if (this.recog != null)
@@ -168,13 +173,18 @@ namespace Controller
                         }
                         break;
                     case State.learn:
-                        // TODO(namos): add ability to learn properties
                         Console.WriteLine("FATAL ERROR: entered learn state on a command");
                         break;
                     case State.getName:
                         String name = command.Replace("it is called", "").Trim();
                         nao.speak("did you say " + name);
                         this.lib.setLearnedName(name);
+                        this.switchStates(State.confirmation);
+                        break;
+                    case State.getProperties:
+                        String prop = command.Replace("it has the property", "").Trim();
+                        nao.speak("did you say " + prop);
+                        this.lib.setLearnedProperty(prop);
                         this.switchStates(State.confirmation);
                         break;
                     case State.find:
@@ -186,11 +196,36 @@ namespace Controller
                             {
                                 nao.speak("Goodbye");
                                 this.exit();
-                            } 
-                            else if (this.lib.saveObject(this.thriftClient))
+                            }
+                            else if (this.lastChangedState == State.getName)
                             {
-                                nao.speak("Ok, I've saved this object");
-                                this.switchStates(State.learn);
+                                if (this.prevState == State.confirmation)
+                                {
+                                    this.switchStates(State.getProperties);
+                                    nao.speak("What is one of it's properties?");
+                                }
+                                else
+                                {
+                                    nao.speak("Ok, does a " + this.lib.curLearningName + " have any properties I should know about?");
+                                    this.switchStates(State.confirmation);
+                                }
+                            }
+                            else if (this.lastChangedState == State.getProperties)
+                            {
+                                if (this.prevState == State.confirmation)
+                                {
+                                    this.switchStates(State.getProperties);
+                                }
+                                else if (this.lib.addPropertyToLearning())
+                                {
+                                    nao.speak("Ok, I've saved this property. Does this object, does it have any more properties?");
+                                    this.switchStates(State.confirmation);
+                                }
+                                else
+                                {
+                                    nao.speak("I'm sorry, it looks like there was an error");
+                                    this.switchStates(State.start);
+                                }
                             }
                             else
                             {
@@ -204,10 +239,28 @@ namespace Controller
                             {
                                 this.switchStates(State.start);
                             }
-                            else
+                            else if (lastChangedState == State.getName)
                             {
                                 this.switchStates(State.getName);
                                 nao.speak("OK, what is it really called?");
+                            }
+                            else if (lastChangedState == State.getProperties)
+                            {
+                                if (this.lib.saveObject(this.thriftClient))
+                                {
+                                    nao.speak("OK, I've saved this object.");
+                                    this.switchStates(State.learn);
+                                }
+                                else
+                                {
+                                    nao.speak("I'm sorry, it looks like there was an error");
+                                    this.switchStates(State.start);
+                                }
+                            }
+                            else
+                            {
+                                nao.speak("I'm sorry, it looks like there was an error");
+                                this.switchStates(State.start);
                             }
                         }
                         break;
