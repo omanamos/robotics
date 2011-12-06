@@ -46,7 +46,7 @@ namespace Controller
             this.nao = new NaoController(NAO_IP);
             this.lib = new ObjectLibrary();
 
-            this.thriftTransport = new TSocket("128.208.4.237", 9090);
+            this.thriftTransport = new TSocket("localhost", 9090);
             thriftTransport.Open();
             TProtocol protocol = new TBinaryProtocol(thriftTransport);
             this.thriftClient = new Rpc.Client(protocol);
