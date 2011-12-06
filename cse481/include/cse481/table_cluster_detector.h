@@ -15,7 +15,8 @@
 #include "pcl/features/normal_3d.h"
 #include "cse481/Table.h"
 #include "cse481/typedefs.h"
-#include "tf/transform_datatypes.h"
+#include <tf/transform_datatypes.h>
+#include <tf/transform_broadcaster.h>
 #include <sensor_msgs/PointCloud.h>
 #include <visualization_msgs/Marker.h>
 
@@ -38,6 +39,7 @@ class TableClusterDetector
   pcl::EuclideanClusterExtraction<Point> cluster_;
 
   ros::Publisher marker_pub;
+  tf::TransformBroadcaster tf_pub_;
   int current_marker_id_;
   double downsample_leaf_, downsample_leaf_objects_;
   int k_;

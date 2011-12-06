@@ -17,6 +17,7 @@ class RpcIf {
   virtual void ping() = 0;
   virtual void getObjects(std::vector<PointCloud> & _return) = 0;
   virtual void locateNao(Point& _return) = 0;
+  virtual bool update(const std::string& oldIdentifier, const std::string& newIdentifier) = 0;
 };
 
 class RpcNull : virtual public RpcIf {
@@ -30,6 +31,10 @@ class RpcNull : virtual public RpcIf {
   }
   void locateNao(Point& /* _return */) {
     return;
+  }
+  bool update(const std::string& /* oldIdentifier */, const std::string& /* newIdentifier */) {
+    bool _return = false;
+    return _return;
   }
 };
 
@@ -295,6 +300,123 @@ class Rpc_locateNao_presult {
 
 };
 
+typedef struct _Rpc_update_args__isset {
+  _Rpc_update_args__isset() : oldIdentifier(false), newIdentifier(false) {}
+  bool oldIdentifier;
+  bool newIdentifier;
+} _Rpc_update_args__isset;
+
+class Rpc_update_args {
+ public:
+
+  Rpc_update_args() : oldIdentifier(""), newIdentifier("") {
+  }
+
+  virtual ~Rpc_update_args() throw() {}
+
+  std::string oldIdentifier;
+  std::string newIdentifier;
+
+  _Rpc_update_args__isset __isset;
+
+  void __set_oldIdentifier(const std::string& val) {
+    oldIdentifier = val;
+  }
+
+  void __set_newIdentifier(const std::string& val) {
+    newIdentifier = val;
+  }
+
+  bool operator == (const Rpc_update_args & rhs) const
+  {
+    if (!(oldIdentifier == rhs.oldIdentifier))
+      return false;
+    if (!(newIdentifier == rhs.newIdentifier))
+      return false;
+    return true;
+  }
+  bool operator != (const Rpc_update_args &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Rpc_update_args & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+
+class Rpc_update_pargs {
+ public:
+
+
+  virtual ~Rpc_update_pargs() throw() {}
+
+  const std::string* oldIdentifier;
+  const std::string* newIdentifier;
+
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Rpc_update_result__isset {
+  _Rpc_update_result__isset() : success(false) {}
+  bool success;
+} _Rpc_update_result__isset;
+
+class Rpc_update_result {
+ public:
+
+  Rpc_update_result() : success(0) {
+  }
+
+  virtual ~Rpc_update_result() throw() {}
+
+  bool success;
+
+  _Rpc_update_result__isset __isset;
+
+  void __set_success(const bool val) {
+    success = val;
+  }
+
+  bool operator == (const Rpc_update_result & rhs) const
+  {
+    if (!(success == rhs.success))
+      return false;
+    return true;
+  }
+  bool operator != (const Rpc_update_result &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Rpc_update_result & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
+typedef struct _Rpc_update_presult__isset {
+  _Rpc_update_presult__isset() : success(false) {}
+  bool success;
+} _Rpc_update_presult__isset;
+
+class Rpc_update_presult {
+ public:
+
+
+  virtual ~Rpc_update_presult() throw() {}
+
+  bool* success;
+
+  _Rpc_update_presult__isset __isset;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+
+};
+
 class RpcClient : virtual public RpcIf {
  public:
   RpcClient(boost::shared_ptr< ::apache::thrift::protocol::TProtocol> prot) :
@@ -324,6 +446,9 @@ class RpcClient : virtual public RpcIf {
   void locateNao(Point& _return);
   void send_locateNao();
   void recv_locateNao(Point& _return);
+  bool update(const std::string& oldIdentifier, const std::string& newIdentifier);
+  void send_update(const std::string& oldIdentifier, const std::string& newIdentifier);
+  bool recv_update();
  protected:
   boost::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot_;
   boost::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot_;
@@ -340,12 +465,14 @@ class RpcProcessor : virtual public ::apache::thrift::TProcessor {
   void process_ping(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_getObjects(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
   void process_locateNao(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
+  void process_update(int32_t seqid, ::apache::thrift::protocol::TProtocol* iprot, ::apache::thrift::protocol::TProtocol* oprot, void* callContext);
  public:
   RpcProcessor(boost::shared_ptr<RpcIf> iface) :
     iface_(iface) {
     processMap_["ping"] = &RpcProcessor::process_ping;
     processMap_["getObjects"] = &RpcProcessor::process_getObjects;
     processMap_["locateNao"] = &RpcProcessor::process_locateNao;
+    processMap_["update"] = &RpcProcessor::process_update;
   }
 
   virtual bool process(boost::shared_ptr< ::apache::thrift::protocol::TProtocol> piprot, boost::shared_ptr< ::apache::thrift::protocol::TProtocol> poprot, void* callContext);
@@ -391,6 +518,17 @@ class RpcMultiface : virtual public RpcIf {
         return;
       } else {
         ifaces_[i]->locateNao(_return);
+      }
+    }
+  }
+
+  bool update(const std::string& oldIdentifier, const std::string& newIdentifier) {
+    size_t sz = ifaces_.size();
+    for (size_t i = 0; i < sz; ++i) {
+      if (i == sz - 1) {
+        return ifaces_[i]->update(oldIdentifier, newIdentifier);
+      } else {
+        ifaces_[i]->update(oldIdentifier, newIdentifier);
       }
     }
   }

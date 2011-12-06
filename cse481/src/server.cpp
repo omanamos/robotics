@@ -13,10 +13,12 @@
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
 #include <std_msgs/ColorRGBA.h>
+#include <tf/transform_listener.h>
 #include "cse481/typedefs.h"
 #include "cse481/object_detector.h"
 #include "cse481/Table.h"
 #include "cse481/marker_generator.h"
+#include "cse481/utils.h"
 
 using namespace ::apache::thrift;
 using namespace ::apache::thrift::protocol;
@@ -30,25 +32,22 @@ using namespace communication;
 void printMatches(const std::vector<ObjectMatch> &matches) {
   BOOST_FOREACH(const ObjectMatch match, matches) {
     std::cout << "Object Name: " << match.getTemplate().getName() << std::endl;
+    std::cout << "Average Color: ";
+    cse481::operator<<(std::cout, getAverageColor(match.getTemplate().getModel())) << std::endl;
     std::cout << "Fitness: " << match.getFitness() << std::endl;
     AffineTransform final_transformation = match.getTransformation();
     // Print the rotation matrix and translation vector
-    Eigen::Matrix3f rotation = final_transformation.block<3,3>(0, 0);
-    Eigen::Vector3f translation = final_transformation.block<3,1>(0, 3);
-
-    printf ("\n");
-    printf ("    | %6.3f %6.3f %6.3f | \n", rotation (0,0), rotation (0,1), rotation (0,2));
-    printf ("R = | %6.3f %6.3f %6.3f | \n", rotation (1,0), rotation (1,1), rotation (1,2));
-    printf ("    | %6.3f %6.3f %6.3f | \n", rotation (2,0), rotation (2,1), rotation (2,2));
-    printf ("\n");
-    printf ("t = < %0.3f, %0.3f, %0.3f >\n", translation (0), translation (1), translation (2));
+    printTransform(final_transformation); 
   }
 }
 
 sensor_msgs::PointCloud2 loadSceneFromFile() {
   // load the scene cloud
   cse481::PointCloud scene;
-  pcl::io::loadPCDFile("test_data/scene.pcd", scene);
+  pcl::io::loadPCDFile("nao_kinect2.pcd", scene);
+  pcl::PointXYZRGB col = getAverageColor(scene);
+  std::cout << "scene avg color: ";
+  cse481::operator<<(std::cout, col) << std::endl;
   // match the point cloud
   sensor_msgs::PointCloud2 scene_msg;
   pcl::toROSMsg(scene, scene_msg);
@@ -60,8 +59,6 @@ sensor_msgs::PointCloud2 loadSceneFromKinect() {
   ROS_WARN("Waiting for point cloud message on 'cloud' topic");
   return *(ros::topic::waitForMessage<sensor_msgs::PointCloud2>("cloud"));
 }
-
-
 
 class RpcHandler : virtual public RpcIf {
   public:
@@ -117,6 +114,7 @@ class RpcHandler : virtual public RpcIf {
     void getObjects(std::vector<communication::PointCloud> & _return) {
       // Get a point cloud from the kinect
       //sensor_msgs::PointCloud2 scene_msg = loadSceneFromKinect();
+      tf::TransformListener l;
       sensor_msgs::PointCloud2 scene_msg = loadSceneFromFile();
       frame_id = scene_msg.header.frame_id;
       std::vector<ObjectMatch> recognized_objects, unrecognized_objects;
@@ -127,14 +125,12 @@ class RpcHandler : virtual public RpcIf {
       green.g = 1.0f;
       green.a = 1.0f;
       publishMatches(recognized_objects, green);
-
       BOOST_FOREACH(ObjectMatch & m, recognized_objects) {
         // Add them to the return vector
         communication::PointCloud c;
         c.identifier = m.getTemplate().getName();
         cse481::PointCloud cloud = m.getTemplate().getModel();
-        Eigen::Vector4f centroid;
-        pcl::compute3DCentroid(cloud, centroid);
+        Eigen::Vector3f centroid(m.getTransformation().block<3,1>(0,3));
 
         communication::Point avg;
         
@@ -160,7 +156,7 @@ class RpcHandler : virtual public RpcIf {
       // Create new templates from the unrecognized objects
       BOOST_FOREACH(ObjectMatch &m, unrecognized_objects) {
         cse481::PointCloud c = m.getTemplate().getModel();
-        cse481::PointCloud c_demeaned;
+        cse481::PointCloud c_tx,c_demeaned;
         Eigen::Vector4f centroid;
         pcl::compute3DCentroid(c, centroid);
         pcl::demeanPointCloud(c, centroid, c_demeaned);
@@ -188,6 +184,9 @@ class RpcHandler : virtual public RpcIf {
         pcl::compute3DCentroid(t1, centroid);
         std::cout << "Name: " << name << std::endl;
         std::cout << "Mean: " << centroid(0) << " " << centroid(1) << " " << centroid(2) << std::endl;
+        pcl::PointXYZRGB col = getAverageColor(t1);
+        std::cout << "template avg color: ";
+        cse481::operator<<(std::cout, col) << std::endl;
         pcl::demeanPointCloud(t1, centroid, t1_centered);
         ObjectTemplate t(name, t1_centered);
         det.addTemplate(t);
@@ -204,14 +203,15 @@ class RpcHandler : virtual public RpcIf {
         pcl::transformPointCloud(m.getTemplate().getModel(), pc, m.getTransformation());
         visualization_msgs::Marker cloud_marker = 
           MarkerGenerator::getCloudMarker(pc, color);
-        cloud_marker.header.frame_id = frame_id;
+        //cloud_marker.header.frame_id = frame_id;
+        cloud_marker.header.frame_id = "/table";
         cloud_marker.ns = "matches";
         cloud_marker.header.stamp = ros::Time::now();
         cloud_marker.id = current_marker_id_++;
         cloud_marker.lifetime = ros::Duration();
         marker_pub.publish(cloud_marker);
         visualization_msgs::Marker mk = getTextMarker(m.getTemplate().getName(), 
-            frame_id, m.getTransformation(), color);
+            "/table", m.getTransformation(), color);
         marker_pub.publish(mk);
       }
     }

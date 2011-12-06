@@ -7,11 +7,18 @@ struct Point {
   3: double z,
 }
 
+struct Color {
+  1: i32 r,
+  2: i32 g,
+  3: i32 b,
+}
+
 struct PointCloud {
   1: list<Point> points,
   2: Point average,
   # default identifiers should start with and underscore
   3: string identifier
+  4: Color color
 }
 
 service Rpc {
