@@ -19,7 +19,7 @@ namespace Controller
     {
         public static readonly String ACTION_LIB_PATH = "temp";
         //public static readonly String NAO_IP = "127.0.0.1";
-        public static readonly String NAO_IP = "128.208.4.225";
+        public static readonly String NAO_IP = "128.208.4.14";
 
         public enum State { waiting, start, confirmation, learn, getName, find };
         private volatile State state;
@@ -46,7 +46,7 @@ namespace Controller
             this.nao = new NaoController(NAO_IP);
             this.lib = new ObjectLibrary();
 
-            this.thriftTransport = new TSocket("localhost", 9090);
+            this.thriftTransport = new TSocket("128.208.4.237", 9090);
             thriftTransport.Open();
             TProtocol protocol = new TBinaryProtocol(thriftTransport);
             this.thriftClient = new Rpc.Client(protocol);

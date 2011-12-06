@@ -21,6 +21,7 @@ namespace Communication
     private List<Point> _points;
     private Point _average;
     private string _identifier;
+    private Color _color;
 
     public List<Point> Points
     {
@@ -61,6 +62,19 @@ namespace Communication
       }
     }
 
+    public Color Color
+    {
+      get
+      {
+        return _color;
+      }
+      set
+      {
+        __isset.color = true;
+        this._color = value;
+      }
+    }
+
 
     public Isset __isset;
     [Serializable]
@@ -68,6 +82,7 @@ namespace Communication
       public bool points;
       public bool average;
       public bool identifier;
+      public bool color;
     }
 
     public PointCloud() {
@@ -118,6 +133,14 @@ namespace Communication
               TProtocolUtil.Skip(iprot, field.Type);
             }
             break;
+          case 4:
+            if (field.Type == TType.Struct) {
+              Color = new Color();
+              Color.Read(iprot);
+            } else { 
+              TProtocolUtil.Skip(iprot, field.Type);
+            }
+            break;
           default: 
             TProtocolUtil.Skip(iprot, field.Type);
             break;
@@ -162,6 +185,14 @@ namespace Communication
         oprot.WriteString(Identifier);
         oprot.WriteFieldEnd();
       }
+      if (Color != null && __isset.color) {
+        field.Name = "color";
+        field.Type = TType.Struct;
+        field.ID = 4;
+        oprot.WriteFieldBegin(field);
+        Color.Write(oprot);
+        oprot.WriteFieldEnd();
+      }
       oprot.WriteFieldStop();
       oprot.WriteStructEnd();
     }
@@ -174,6 +205,8 @@ namespace Communication
       sb.Append(Average== null ? "<null>" : Average.ToString());
       sb.Append(",Identifier: ");
       sb.Append(Identifier);
+      sb.Append(",Color: ");
+      sb.Append(Color== null ? "<null>" : Color.ToString());
       sb.Append(")");
       return sb.ToString();
     }
