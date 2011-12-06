@@ -94,7 +94,9 @@ namespace Controller
 
             Communication.Point p = new Communication.Point();
             p.X = obj.X - nao.X;
-            p.Y = obj.Y - nao.Y;            
+            p.Y = obj.Y - nao.Y;
+            // p.X = obj.Y - nao.Y;
+            // p.Y = obj.X - nao.X;
             p.Z = getRightAng(nao.Z);
 
             rotate(p);
