@@ -72,18 +72,76 @@ class Point {
 
 };
 
+typedef struct _Color__isset {
+  _Color__isset() : r(false), g(false), b(false) {}
+  bool r;
+  bool g;
+  bool b;
+} _Color__isset;
+
+class Color {
+ public:
+
+  static const char* ascii_fingerprint; // = "6435B39C87AB0E30F30BEDEFD7328C0D";
+  static const uint8_t binary_fingerprint[16]; // = {0x64,0x35,0xB3,0x9C,0x87,0xAB,0x0E,0x30,0xF3,0x0B,0xED,0xEF,0xD7,0x32,0x8C,0x0D};
+
+  Color() : r(0), g(0), b(0) {
+  }
+
+  virtual ~Color() throw() {}
+
+  int32_t r;
+  int32_t g;
+  int32_t b;
+
+  _Color__isset __isset;
+
+  void __set_r(const int32_t val) {
+    r = val;
+  }
+
+  void __set_g(const int32_t val) {
+    g = val;
+  }
+
+  void __set_b(const int32_t val) {
+    b = val;
+  }
+
+  bool operator == (const Color & rhs) const
+  {
+    if (!(r == rhs.r))
+      return false;
+    if (!(g == rhs.g))
+      return false;
+    if (!(b == rhs.b))
+      return false;
+    return true;
+  }
+  bool operator != (const Color &rhs) const {
+    return !(*this == rhs);
+  }
+
+  bool operator < (const Color & ) const;
+
+  uint32_t read(::apache::thrift::protocol::TProtocol* iprot);
+  uint32_t write(::apache::thrift::protocol::TProtocol* oprot) const;
+
+};
+
 typedef struct _PointCloud__isset {
-  _PointCloud__isset() : points(false), average(false), identifier(false) {}
+  _PointCloud__isset() : points(false), average(false), identifier(false), color(false) {}
   bool points;
   bool average;
   bool identifier;
+  bool color;
 } _PointCloud__isset;
 
 class PointCloud {
  public:
 
-  static const char* ascii_fingerprint; // = "DB516E1F88886FFE4164E5FDD3EBF640";
-  static const uint8_t binary_fingerprint[16]; // = {0xDB,0x51,0x6E,0x1F,0x88,0x88,0x6F,0xFE,0x41,0x64,0xE5,0xFD,0xD3,0xEB,0xF6,0x40};
+  static const char* ascii_fingerprint; // = "77062B174AF362E04E6A39C156B455CF";
+  static const uint8_t binary_fingerprint[16]; // = {0x77,0x06,0x2B,0x17,0x4A,0xF3,0x62,0xE0,0x4E,0x6A,0x39,0xC1,0x56,0xB4,0x55,0xCF};
 
   PointCloud() : identifier("") {
   }
@@ -93,6 +151,7 @@ class PointCloud {
   std::vector<Point>  points;
   Point average;
   std::string identifier;
+  Color color;
 
   _PointCloud__isset __isset;
 
@@ -108,6 +167,10 @@ class PointCloud {
     identifier = val;
   }
 
+  void __set_color(const Color& val) {
+    color = val;
+  }
+
   bool operator == (const PointCloud & rhs) const
   {
     if (!(points == rhs.points))
@@ -115,6 +178,8 @@ class PointCloud {
     if (!(average == rhs.average))
       return false;
     if (!(identifier == rhs.identifier))
+      return false;
+    if (!(color == rhs.color))
       return false;
     return true;
   }

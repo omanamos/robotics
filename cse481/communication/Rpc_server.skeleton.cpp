@@ -37,6 +37,11 @@ class RpcHandler : virtual public RpcIf {
     printf("locateNao\n");
   }
 
+  bool update(const std::string& oldIdentifier, const std::string& newIdentifier) {
+    // Your implementation goes here
+    printf("update\n");
+  }
+
 };
 
 int main(int argc, char **argv) {

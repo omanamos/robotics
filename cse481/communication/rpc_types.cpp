@@ -83,8 +83,84 @@ uint32_t Point::write(::apache::thrift::protocol::TProtocol* oprot) const {
   return xfer;
 }
 
-const char* PointCloud::ascii_fingerprint = "DB516E1F88886FFE4164E5FDD3EBF640";
-const uint8_t PointCloud::binary_fingerprint[16] = {0xDB,0x51,0x6E,0x1F,0x88,0x88,0x6F,0xFE,0x41,0x64,0xE5,0xFD,0xD3,0xEB,0xF6,0x40};
+const char* Color::ascii_fingerprint = "6435B39C87AB0E30F30BEDEFD7328C0D";
+const uint8_t Color::binary_fingerprint[16] = {0x64,0x35,0xB3,0x9C,0x87,0xAB,0x0E,0x30,0xF3,0x0B,0xED,0xEF,0xD7,0x32,0x8C,0x0D};
+
+uint32_t Color::read(::apache::thrift::protocol::TProtocol* iprot) {
+
+  uint32_t xfer = 0;
+  std::string fname;
+  ::apache::thrift::protocol::TType ftype;
+  int16_t fid;
+
+  xfer += iprot->readStructBegin(fname);
+
+  using ::apache::thrift::protocol::TProtocolException;
+
+
+  while (true)
+  {
+    xfer += iprot->readFieldBegin(fname, ftype, fid);
+    if (ftype == ::apache::thrift::protocol::T_STOP) {
+      break;
+    }
+    switch (fid)
+    {
+      case 1:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->r);
+          this->__isset.r = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 2:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->g);
+          this->__isset.g = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      case 3:
+        if (ftype == ::apache::thrift::protocol::T_I32) {
+          xfer += iprot->readI32(this->b);
+          this->__isset.b = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
+      default:
+        xfer += iprot->skip(ftype);
+        break;
+    }
+    xfer += iprot->readFieldEnd();
+  }
+
+  xfer += iprot->readStructEnd();
+
+  return xfer;
+}
+
+uint32_t Color::write(::apache::thrift::protocol::TProtocol* oprot) const {
+  uint32_t xfer = 0;
+  xfer += oprot->writeStructBegin("Color");
+  xfer += oprot->writeFieldBegin("r", ::apache::thrift::protocol::T_I32, 1);
+  xfer += oprot->writeI32(this->r);
+  xfer += oprot->writeFieldEnd();
+  xfer += oprot->writeFieldBegin("g", ::apache::thrift::protocol::T_I32, 2);
+  xfer += oprot->writeI32(this->g);
+  xfer += oprot->writeFieldEnd();
+  xfer += oprot->writeFieldBegin("b", ::apache::thrift::protocol::T_I32, 3);
+  xfer += oprot->writeI32(this->b);
+  xfer += oprot->writeFieldEnd();
+  xfer += oprot->writeFieldStop();
+  xfer += oprot->writeStructEnd();
+  return xfer;
+}
+
+const char* PointCloud::ascii_fingerprint = "77062B174AF362E04E6A39C156B455CF";
+const uint8_t PointCloud::binary_fingerprint[16] = {0x77,0x06,0x2B,0x17,0x4A,0xF3,0x62,0xE0,0x4E,0x6A,0x39,0xC1,0x56,0xB4,0x55,0xCF};
 
 uint32_t PointCloud::read(::apache::thrift::protocol::TProtocol* iprot) {
 
@@ -142,6 +218,14 @@ uint32_t PointCloud::read(::apache::thrift::protocol::TProtocol* iprot) {
           xfer += iprot->skip(ftype);
         }
         break;
+      case 4:
+        if (ftype == ::apache::thrift::protocol::T_STRUCT) {
+          xfer += this->color.read(iprot);
+          this->__isset.color = true;
+        } else {
+          xfer += iprot->skip(ftype);
+        }
+        break;
       default:
         xfer += iprot->skip(ftype);
         break;
@@ -173,6 +257,9 @@ uint32_t PointCloud::write(::apache::thrift::protocol::TProtocol* oprot) const {
   xfer += oprot->writeFieldEnd();
   xfer += oprot->writeFieldBegin("identifier", ::apache::thrift::protocol::T_STRING, 3);
   xfer += oprot->writeString(this->identifier);
+  xfer += oprot->writeFieldEnd();
+  xfer += oprot->writeFieldBegin("color", ::apache::thrift::protocol::T_STRUCT, 4);
+  xfer += this->color.write(oprot);
   xfer += oprot->writeFieldEnd();
   xfer += oprot->writeFieldStop();
   xfer += oprot->writeStructEnd();
