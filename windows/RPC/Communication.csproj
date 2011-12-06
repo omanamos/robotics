@@ -46,6 +46,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Color.cs" />
     <Compile Include="CsharpClient.cs" />
     <Compile Include="CsharpServer.cs" />
     <Compile Include="Point.cs" />

@@ -18,7 +18,9 @@ namespace DataStore
         private SerializableDictionary<string, List<RecogObject>> lookupByProperty;
 
         private PointCloud curLearning;
-        private string curLearningName;
+        public string curLearningName;
+        private string curLearningProp;
+        private List<string> props;
 
         public ObjectLibrary()
         {
@@ -57,10 +59,25 @@ namespace DataStore
             }
         }
 
+        public bool addPropertyToLearning()
+        {
+            if (this.curLearning == null || this.curLearningProp == null)
+            {
+                return false;
+            }
+            else
+            {
+                this.props.Add(this.curLearningProp);
+                return true;
+            }
+        }
+
         public void cancelLearning()
         {
             this.curLearning = null;
             this.curLearningName = null;
+            this.props = null;
+            this.curLearningProp = null;
         }
 
         public void loadPointClouds(List<PointCloud> clouds)
@@ -88,6 +105,7 @@ namespace DataStore
             else
             {
                 this.curLearning = this.unknownPointClouds.FirstOrDefault().Value;
+                this.props = new List<string>();
                 return this.curLearning;
             }
         }
@@ -95,6 +113,11 @@ namespace DataStore
         public void setLearnedName(string s)
         {
             this.curLearningName = s;
+        }
+
+        public void setLearnedProperty(string s)
+        {
+            this.curLearningProp = s;
         }
 
         public bool saveObject(Rpc.Client client)
@@ -112,7 +135,8 @@ namespace DataStore
                     this.curLearning.Identifier = this.curLearningName;
                     this.knownPointClouds[this.curLearningName] = this.curLearning;
                     RecogObject obj = new RecogObject(this.curLearningName);
-                    this.objects[this.curLearningName] = obj;
+                    obj.addProperties(props);
+                    this.addObject(obj);
                     this.curLearning = null;
                     this.curLearningName = null;
                     return true;

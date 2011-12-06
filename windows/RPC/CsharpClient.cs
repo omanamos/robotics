@@ -13,7 +13,7 @@ namespace Communication
         {
             try
             {
-                TTransport transport = new TSocket("localhost", 9090);
+                TTransport transport = new TSocket("128.208.4.237", 9090);
                 TProtocol protocol = new TBinaryProtocol(transport);
                 Rpc.Client client = new Rpc.Client(protocol);
 

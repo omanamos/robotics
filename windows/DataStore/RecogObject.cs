@@ -24,6 +24,11 @@ namespace DataStore
             this.properties.Add(property);
         }
 
+        public void addProperties(List<string> properties)
+        {
+            this.properties = this.properties.Union(properties).ToList();
+        }
+
         public List<string> getProperties()
         {
             return this.properties;
