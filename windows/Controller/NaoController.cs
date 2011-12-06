@@ -92,15 +92,13 @@ namespace Controller
             proxy.post.walkTo(x, y, 0.0f);
             */
 
-            
-
             Communication.Point p = new Communication.Point();
             p.X = obj.X - nao.X;
             p.Y = obj.Y - nao.Y;            
             p.Z = getRightAng(nao.Z);
 
             rotate(p);
-                        
+            
             double newZ = Math.Atan2(p.Y, p.X);
             if (newZ > PI)
                 newZ = PI;
@@ -176,6 +174,12 @@ namespace Controller
         public bool isWalking()
         {
             return proxy.walkIsActive();
+        }
+
+        public void raiseArms()
+        {
+            String[] joints = {"LShoulderPitch", "RShoulderPitch"};
+            proxy.setAngles(joints, 0.0f, 0.5f);
         }
     }
 }

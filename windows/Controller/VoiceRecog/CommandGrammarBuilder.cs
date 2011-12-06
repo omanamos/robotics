@@ -11,9 +11,16 @@ namespace VoiceRecog
 {
     class CommandGrammarBuilder
     {
+        private static string[] nouns = loadNouns();
         private Grammar grammar;
         private string prefix;
         private List<string> strings;
+
+        private static string[] loadNouns()
+        {
+            string[] rtn = System.IO.File.ReadAllLines("../../VoiceRecog/nouns.txt");
+            return rtn;
+        }
 
         public CommandGrammarBuilder(MainController.State state, ObjectLibrary lib)
         {
@@ -66,7 +73,7 @@ namespace VoiceRecog
         private Grammar buildGetNameGrammar()
         {
             GrammarBuilder builder = new GrammarBuilder("it is called");
-            builder.AppendDictation();
+            builder.Append(new Choices(CommandGrammarBuilder.nouns));
             this.prefix = "it is called";
             return new Grammar(builder);
         }
