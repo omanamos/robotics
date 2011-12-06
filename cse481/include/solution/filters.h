@@ -56,7 +56,7 @@ applyFilters (const PointCloudPtr & input, float min_depth, float max_depth, flo
   PointCloudPtr filtered;
   filtered = thresholdDepth (input, min_depth, max_depth);
   filtered = downsample (filtered, leaf_size);
-  filtered = removeOutliers (filtered, radius, min_neighbors);
+  //filtered = removeOutliers (filtered, radius, min_neighbors);
 
   return (filtered);
 }

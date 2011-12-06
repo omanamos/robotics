@@ -50,7 +50,7 @@ class RpcHandler : virtual public communication::RpcIf {
     loadParams(argc, argv);
     rec.reset(new ObjectRecognition(params));
     // Load the NAO model in
-    rec->loadNaoModel("models/nao2/nao");
+    rec->loadNaoModel("models/nao3/nao");
     ros::NodeHandle nh;
     marker_pub = nh.advertise<visualization_msgs::Marker>("server_markers", 10);
     marker_ids_ = 0;
@@ -73,6 +73,40 @@ class RpcHandler : virtual public communication::RpcIf {
     PointCloudPtr pclCloud(new PointCloud);
     pcl::fromROSMsg(*cloud, *pclCloud);
     return pclCloud;
+  }
+
+  void removeOldMarkers() {
+    ROS_INFO("Removing %zd markers", markers_to_remove.size());
+    BOOST_FOREACH(visualization_msgs::Marker m, markers_to_remove) {
+      m.type = visualization_msgs::Marker::DELETE;
+      marker_pub.publish(m);
+    }
+    markers_to_remove.clear();
+  }
+
+  visualization_msgs::Marker getTextMarker(const std::string &text, 
+      const std::string &frame_id, const Eigen::Affine3f &pose, 
+      const std_msgs::ColorRGBA &color) {
+    visualization_msgs::Marker m;
+    m.header.frame_id = frame_id;
+    m.header.stamp = ros::Time::now();
+    m.ns = "text";
+    m.type = visualization_msgs::Marker::TEXT_VIEW_FACING;
+    m.action = visualization_msgs::Marker::ADD;
+
+    Eigen::Vector3f translation = pose.matrix().block<3,1>(0, 3);
+    m.pose.position.x = translation(0); 
+    m.pose.position.y = translation(1); 
+    m.pose.position.z = translation(2);
+    m.pose.orientation.w = 1.0;
+
+    m.color = color;
+    m.scale.z = 0.1;
+    m.text = text;
+    m.id = marker_ids_++;
+    markers_to_remove.push_back(m);
+    m.lifetime = ros::Duration();
+    return m;
   }
 
   void getObjects(std::vector<communication::PointCloud> & objects) {
@@ -102,7 +136,7 @@ class RpcHandler : virtual public communication::RpcIf {
     red.a = 1.0;
 
 
-    
+    removeOldMarkers();
     
     BOOST_FOREACH(DetectedObject &det, found_objects) {
       printObject(det);
@@ -124,13 +158,19 @@ class RpcHandler : virtual public communication::RpcIf {
         unknownModels.push_back(det);
 
         PointCloud transformed_object;
-        pcl::transformPointCloud(det.points, transformed_object, rec->getLatestPlaneTransform() * det.transform);
+        Eigen::Affine3f poseInCameraFrame = rec->getLatestPlaneTransform() * det.transform;
+        pcl::transformPointCloud(det.points, transformed_object, poseInCameraFrame);
         visualization_msgs::Marker obj_marker = MarkerGenerator::getCloudMarker(transformed_object, red);
         obj_marker.header.frame_id = "/camera_rgb_optical_frame";
         obj_marker.header.stamp = ros::Time::now();
         obj_marker.id = marker_ids_++;
+        markers_to_remove.push_back(obj_marker);
         obj_marker.ns = "unrecognized_objects";
+        
+        visualization_msgs::Marker obj_name = getTextMarker(det.identifier, 
+            obj_marker.header.frame_id, poseInCameraFrame, red);
         marker_pub.publish(obj_marker);
+        marker_pub.publish(obj_name);
       } else {
         // Look up the point cloud
         communication::PointCloud& res = objects_map[det.identifier];
@@ -141,12 +181,19 @@ class RpcHandler : virtual public communication::RpcIf {
         objects.push_back(res);
 
         PointCloud transformed_object;
-        pcl::transformPointCloud(det.points, transformed_object, rec->getLatestPlaneTransform() * det.transform);
+        Eigen::Affine3f poseInCameraFrame = rec->getLatestPlaneTransform() * det.transform;
+        pcl::transformPointCloud(det.points, transformed_object, poseInCameraFrame);
         visualization_msgs::Marker obj_marker = MarkerGenerator::getCloudMarker(transformed_object, green);
         obj_marker.header.frame_id = "/camera_rgb_optical_frame";
         obj_marker.header.stamp = ros::Time::now();
         obj_marker.id = marker_ids_++;
+        markers_to_remove.push_back(obj_marker);
         obj_marker.ns = "recognized_objects";
+        
+        visualization_msgs::Marker obj_name = getTextMarker(det.identifier, 
+            obj_marker.header.frame_id, poseInCameraFrame, green);
+        marker_pub.publish(obj_name);
+
         marker_pub.publish(obj_marker);
       }
     }
@@ -170,13 +217,14 @@ class RpcHandler : virtual public communication::RpcIf {
 
     PointCloud tr_nao;
     pcl::transformPointCloud(*naoModel, tr_nao, rec->getLatestPlaneTransform() * nao_tr);
-    std_msgs::ColorRGBA green;
-    green.a = 1.0;
-    green.g = 1.0;
-    visualization_msgs::Marker nao_marker = MarkerGenerator::getCloudMarker(tr_nao, green);
+    std_msgs::ColorRGBA col;
+    col.a = 1.0;
+    col.r = 1.0;
+    col.b = 1.0;
+    visualization_msgs::Marker nao_marker = MarkerGenerator::getCloudMarker(tr_nao, col);
     nao_marker.header.frame_id = "/camera_rgb_optical_frame";
     nao_marker.header.stamp = ros::Time::now();
-    nao_marker.id = marker_ids_++;
+    nao_marker.id = 12345;
     nao_marker.ns = "nao";
     marker_pub.publish(nao_marker);
 
@@ -292,6 +340,7 @@ class RpcHandler : virtual public communication::RpcIf {
   ObjectRecognitionParameters params;
   shared_ptr<ObjectRecognition> rec;
   ros::Publisher marker_pub;
+  std::vector<visualization_msgs::Marker> markers_to_remove;
   int marker_ids_;
   bool useKinect;
 };

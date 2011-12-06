@@ -145,19 +145,7 @@ class ObjectRecognition
       naoModel.identifier = "nao";
     }
 
-    PointCloudPtr findNao(const PointCloudPtr & query_cloud, Eigen::Affine3f *nao_transform) {
-      if (naoModel.identifier != "nao") {
-        ROS_ERROR("Nao model is not yet set!");
-        return PointCloudPtr(new PointCloud); 
-      }
-
-      camera_frame_ = query_cloud->header.frame_id;
-      // Need to clear the frame_id so that it matches saved models
-      query_cloud->header.frame_id = "";
-
-      std::vector<ObjectModel> query_clusters;
-      constructObjectModelsFromScene (query_cloud, query_clusters);
-
+    PointCloudPtr matchClustersToNao(std::vector<ObjectModel>& query_clusters, bool align, Eigen::Affine3f *nao_transform) {
       pcl::KdTreeFLANN<GlobalDescriptorT> scene_objects_tree;
       
       GlobalDescriptorsPtr descriptors_list(new GlobalDescriptors);
@@ -175,28 +163,56 @@ class ObjectRecognition
         // Search for the NAO descriptor in the scene
         std::vector<int> nn_index (1);
         std::vector<float> nn_sqr_distance (1);
-        scene_objects_tree.nearestKSearch (naoModel.global_descriptor->points[0], 1, 
+        scene_objects_tree.nearestKSearch (naoModel.global_descriptor->points[0], descriptors_list->size(), 
           nn_index, nn_sqr_distance);
         const int & best_match = nn_index[0];
+        ROS_INFO("Locating NAO: Object distances:");
+        for (int i=0; i < descriptors_list->size(); i++) {
+          ROS_INFO("%d: %f", i, nn_sqr_distance[i]);
+        }
+
         ROS_INFO("Finding the NAO, squared distance: %f", nn_sqr_distance[0]);
 
-        ROS_INFO("Aligning NAO to object %d", best_match);
-        PointCloudPtr output = alignModelPoints (naoModel, query_clusters[best_match], params_, nao_transform);
+        if (align) {
+          ROS_INFO("Aligning NAO to object %d", best_match);
+          PointCloudPtr output = alignModelPoints (naoModel, query_clusters[best_match], params_, nao_transform);
+        }
+        query_clusters.erase(query_clusters.begin()+best_match);
       }
       return (naoModel.points);
     }
 
+    PointCloudPtr findNao(const PointCloudPtr & query_cloud, Eigen::Affine3f *nao_transform) {
+      if (naoModel.identifier != "nao") {
+        ROS_ERROR("Nao model is not yet set!");
+        return PointCloudPtr(new PointCloud); 
+      }
+
+      camera_frame_ = query_cloud->header.frame_id;
+      // Need to clear the frame_id so that it matches saved models
+      query_cloud->header.frame_id = "";
+
+      std::vector<ObjectModel> query_clusters;
+      constructObjectModelsFromScene (query_cloud, query_clusters);
+      return matchClustersToNao(query_clusters, true, nao_transform);
+    }
     void
     recognizeAndAlignPoints (const PointCloudPtr & query_cloud, std::vector<DetectedObject> *found_objects)
     {
       std::vector<ObjectModel> query_clusters;
+      camera_frame_ = query_cloud->header.frame_id;
+      // Need to clear the frame_id so that it matches saved models
+      query_cloud->header.frame_id = "";
       constructObjectModelsFromScene (query_cloud, query_clusters);
       size_t numClusters = query_clusters.size();
       ROS_INFO("Found %zd clusters", numClusters);
       if (numClusters > 0) {
+        matchClustersToNao(query_clusters, false, NULL);
+        numClusters = query_clusters.size();
+        ROS_INFO("After removing NAO, found %zd clusters", numClusters);
         for (size_t i = 0; i < query_clusters.size(); i++) {
-          ROS_INFO("Recognizing and aligning object %zd", i);
           ObjectModel query_object = query_clusters[i];
+          ROS_INFO("Recognizing and aligning cluster%zd with %zd points", i, query_object.points->size());
           const GlobalDescriptorT & query_descriptor = query_object.global_descriptor->points[0];
          
           DetectedObject det;
@@ -204,8 +220,12 @@ class ObjectRecognition
           std::vector<float> nn_sqr_distance (1);
 
           if (descriptors_->size() > 0) {
-            kdtree_->nearestKSearch (query_descriptor, 1, nn_index, nn_sqr_distance);
+            kdtree_->nearestKSearch (query_descriptor, descriptors_->size(), nn_index, nn_sqr_distance);
             ROS_INFO("Squared distance: %f", nn_sqr_distance[0]);
+            ROS_INFO("Finding best match to cluster in known objects");
+            for (int i=0; i < descriptors_->size(); i++) {
+              ROS_INFO("Match %d (%s): Distance: %f", i, models_[i].identifier.c_str(), nn_sqr_distance[i]);
+            }
           } else {
             nn_sqr_distance[0] = std::numeric_limits<float>::infinity();
           }

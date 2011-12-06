@@ -110,8 +110,8 @@ visualization_msgs::Marker MarkerGenerator::getCloudMarker(
   marker.lifetime = ros::Duration();
 
   marker.type = visualization_msgs::Marker::POINTS;
-  marker.scale.x = 0.002;
-  marker.scale.y = 0.002;
+  marker.scale.x = 0.006;
+  marker.scale.y = 0.006;
   marker.scale.z = 1.0;
 
   if (color.a == 0.0) {

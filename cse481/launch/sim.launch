@@ -1,8 +1,9 @@
 <launch>
   <include file="$(find openni_launch)/launch/kinect_frames.launch" />
   <node name="sim_data" pkg="pcl_ros" type="pcd_to_pointcloud" 
-    args="$(find cse481)/nao_kinect1.pcd 0.5" >
+    args="$(find cse481)/nao_cups_ball.pcd 0.5" >
     <param name="frame_id" value="/camera_rgb_optical_frame" />
+    <remap from="/cloud_pcd" to="/camera/depth_registered/points" />
   </node>
   <node name="rviz" pkg="rviz" type="rviz" />
 </launch>

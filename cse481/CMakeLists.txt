@@ -33,7 +33,7 @@ rosbuild_add_library(rpc communication/Rpc.cpp communication/rpc_constants.cpp c
 include_directories(communication)
 #rosbuild_add_executable(server src/server.cpp src/marker_generator.cpp)
 rosbuild_add_executable(server src/server_new.cpp src/marker_generator.cpp)
-rosbuild_add_executable(demean src/model_demeaner.cpp)
+#rosbuild_add_executable(demean src/model_demeaner.cpp)
 #target_link_libraries(server rpc object_detector)
 target_link_libraries(server rpc)
 
