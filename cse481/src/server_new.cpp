@@ -53,6 +53,7 @@ class RpcHandler : virtual public communication::RpcIf {
     rec->loadNaoModel("models/nao3/nao");
     ros::NodeHandle nh;
     marker_pub = nh.advertise<visualization_msgs::Marker>("server_markers", 10);
+    nao_pose_pub = nh.advertise<geometry_msgs::PoseStamped>("nao_pose", 10);
     marker_ids_ = 0;
     useKinect = true;
   }
@@ -64,7 +65,7 @@ class RpcHandler : virtual public communication::RpcIf {
 
   void printObject(const DetectedObject &obj) {
     ROS_INFO_STREAM("Found object: " << obj.identifier);
-    ROS_INFO_STREAM("Location: " << std::endl << obj.transform.translation());
+    ROS_INFO_STREAM("Location: " << std::endl << obj.transform.matrix());
     ROS_INFO("Fitness: %f", obj.fitness);
   }
 
@@ -212,11 +213,12 @@ class RpcHandler : virtual public communication::RpcIf {
       scene = loadPointCloud<PointT>("nao_kinect1", ".pcd");
       scene->header.frame_id = "/camera_rgb_optical_frame";
     }
-    Eigen::Affine3f nao_tr;
+    Eigen::Affine3f nao_tr, nao_tr_in_camera;
     PointCloudPtr naoModel = rec->findNao(scene, &nao_tr);
 
     PointCloud tr_nao;
-    pcl::transformPointCloud(*naoModel, tr_nao, rec->getLatestPlaneTransform() * nao_tr);
+    nao_tr_in_camera = rec->getLatestPlaneTransform() * nao_tr;
+    pcl::transformPointCloud(*naoModel, tr_nao, nao_tr_in_camera);
     std_msgs::ColorRGBA col;
     col.a = 1.0;
     col.r = 1.0;
@@ -228,12 +230,21 @@ class RpcHandler : virtual public communication::RpcIf {
     nao_marker.ns = "nao";
     marker_pub.publish(nao_marker);
 
+    Eigen::Affine3d nao_tr_doubl(nao_tr_in_camera);
+    geometry_msgs::PoseStamped nao_pose;
+    tf::poseEigenToMsg(nao_tr_doubl,nao_pose.pose);
+    nao_pose.header = nao_marker.header;
+    nao_pose_pub.publish(nao_pose);
+
+    ROS_INFO("Nao Transform in table plane:");
+    ROS_INFO_STREAM(nao_tr.matrix());
+
     Eigen::Vector3f position = nao_tr.matrix().block<3,1>(0,3);
-    Eigen::Vector3f xvector = nao_tr.matrix().block<3,1>(0,0);
+    Eigen::Vector3f zvector = nao_tr.matrix().block<3,1>(0,2);
     loc.x = position(0);
     loc.y = position(1);
     // Z is angle between nao-forward and floor +x
-    loc.z = atan2(xvector(0), xvector(1));
+    loc.z = atan2(-zvector(1), -zvector(0));
     printf("NAO Position: %f %f, Theta: %f\n", loc.x, loc.y, loc.z);
   }
 
@@ -339,7 +350,7 @@ class RpcHandler : virtual public communication::RpcIf {
   std::map<std::string, communication::PointCloud> objects_map;
   ObjectRecognitionParameters params;
   shared_ptr<ObjectRecognition> rec;
-  ros::Publisher marker_pub;
+  ros::Publisher marker_pub, nao_pose_pub;
   std::vector<visualization_msgs::Marker> markers_to_remove;
   int marker_ids_;
   bool useKinect;

@@ -46,17 +46,20 @@ void computePlaneTransform(const pcl::ModelCoefficients & coeffs, Eigen::Affine3
   double a = coeffs.values[0], b = coeffs.values[1], c = coeffs.values[2], d = coeffs.values[3];
   Eigen::Vector3f position(-a*d, -b*d, -c*d);
   Eigen::Vector3f z(a, b, c);
+  z = z.normalized();
+  ROS_INFO("Table Z-vector:");
+  ROS_INFO_STREAM("\n" << z);
   if (z.dot(Eigen::Vector3f(0,0, up_direction)) < 0 ) {
     z = -1.0 * z;
     ROS_INFO("flipped z");
   }
 
-  Eigen::Vector3f x(0,1,0);
+  Eigen::Vector3f x(1,0,0);
   //if ( fabs(z.dot(x)) > 1.0 - 1.0e-4) x = Eigen::Vector3f(0, 1, 0);
-  Eigen::Vector3f y = z.cross(x).normalized();
-  x = y.cross(z).normalized();
-  tr.matrix().block<3,1>(0,0) = x;
-  tr.matrix().block<3,1>(0,1) = y;
+  Eigen::Vector3f myx = z.cross(x).normalized();
+  Eigen::Vector3f myy = myx.cross(-z).normalized();
+  tr.matrix().block<3,1>(0,0) = myx;
+  tr.matrix().block<3,1>(0,1) = myy;
   tr.matrix().block<3,1>(0,2) = z;
   tr.matrix().block<3,1>(0,3) = position;
   //tr.rotate(Eigen::AngleAxisf(3.14, z));
