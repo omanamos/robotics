@@ -19,8 +19,9 @@ namespace VoiceRecog
 
         private static string[] loadNouns()
         {
-            string[] rtn = System.IO.File.ReadAllLines("../../VoiceRecog/nouns.txt");
-            return rtn;
+            string[] input = System.IO.File.ReadAllLines("../../VoiceRecog/nouns.txt");
+            HashSet<string> rtn = new HashSet<string>(input);
+            return rtn.ToArray();
         }
 
         private static string[] loadAdj()

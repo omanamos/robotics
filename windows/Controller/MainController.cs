@@ -204,7 +204,7 @@ namespace Controller
                         this.switchStates(State.confirmation);
                         break;
                     case State.getProperties:
-                        String prop = command.Replace("it has the property", "").Trim();
+                        String prop = command.Replace("it has the property", "").Replace("object", "").Trim();
                         nao.speak("did you say " + prop);
                         this.lib.setLearnedProperty(prop);
                         this.switchStates(State.confirmation);
