@@ -154,8 +154,13 @@ namespace Communication
 
       public bool update(string oldIdentifier, string newIdentifier)
       {
+          while (this.isWaiting) Thread.Sleep(100);
+          this.isWaiting = true;
         send_update(oldIdentifier, newIdentifier);
-        return recv_update();
+        Console.WriteLine("Update: {0} {1}", oldIdentifier, newIdentifier);
+        bool rtn = recv_update();
+        this.isWaiting = false;
+        return rtn;
       }
 
       public void send_update(string oldIdentifier, string newIdentifier)

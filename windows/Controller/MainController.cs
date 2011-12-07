@@ -20,10 +20,10 @@ namespace Controller
     {
         public static readonly int THRIFT_SLEEP = 100;
         public static readonly String ACTION_LIB_PATH = "temp";
-        //public static readonly String NAO_IP = "127.0.0.1";
-        public static readonly String NAO_IP = "128.208.4.14";
+        public static readonly String NAO_IP = "127.0.0.1";
+        //public static readonly String NAO_IP = "128.208.6.135";
         //public static readonly String SERVER_IP = "localhost";
-        public static readonly String SERVER_IP = "128.208.4.19";
+        public static readonly String SERVER_IP = "128.208.6.139";
 
         public enum State { waiting, start, confirmation, learn, getName, getProperties, find };
         private volatile State state;
@@ -74,6 +74,7 @@ namespace Controller
         public void abort()
         {
             Console.Write("Aborting...");
+            this.thriftClient.isWaiting = false;
             this.nav.stop();
             this.navThread.Abort();
             this.navThread = null;
@@ -302,8 +303,15 @@ namespace Controller
 
         public Point locateNao()
         {
-            while (this.thriftClient.isWaiting) { Thread.Sleep(THRIFT_SLEEP); }
+            while (this.thriftClient.isWaiting) { this.sleep(true); }
             return this.thriftClient.locateNao();
+        }
+
+        public void sleep(bool thrift)
+        {
+            Console.Write(".");
+            Thread.Sleep(THRIFT_SLEEP);
+            Console.Write("!");
         }
 
         private string removeNWords(string str, int n)

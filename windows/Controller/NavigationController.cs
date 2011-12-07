@@ -44,10 +44,10 @@ namespace Controller
             {
                 RecogObject obj = lib.getObject(pair.Key);
                 nao.walkToObject(pair.Value.Average, naoLocation);
-                do { Thread.Sleep(1000); } while (!this.stopped && nao.isWalking());
+                do { this.main.sleep(true); } while (!this.stopped && nao.isWalking());
                 naoLocation = this.main.locateNao();
                 nao.walkToObject(pair.Value.Average, naoLocation);
-                do { Thread.Sleep(1000); } while (!this.stopped && nao.isWalking());
+                do { this.main.sleep(true); } while (!this.stopped && nao.isWalking());
                 if (this.stopped) { return; }
                 nao.speak("this is a " + pair.Key);
                 if (this.stopped) { return; }
@@ -86,10 +86,10 @@ namespace Controller
             {
                 PointCloud pc = this.lib.getPointCloud(obj.identifier);
                 nao.walkToObject(pc.Average, naoLocation);
-                do { Thread.Sleep(1000); } while (!this.stopped && nao.isWalking());
+                do { this.main.sleep(true); } while (!this.stopped && nao.isWalking());
                 naoLocation = this.main.locateNao();
                 nao.walkToObject(pc.Average, naoLocation);
-                do { Thread.Sleep(1000); } while (!this.stopped && nao.isWalking());
+                do { this.main.sleep(true); } while (!this.stopped && nao.isWalking());
                 if (this.stopped) { return; }
                 nao.speak("this is a " + obj.identifier);
                 if (this.stopped) { return; }
@@ -111,10 +111,10 @@ namespace Controller
             Point naoLocation = this.main.locateNao();
             PointCloud pc = this.lib.getPointCloud(obj.identifier);
             nao.walkToObject(pc.Average, naoLocation);
-            do { Thread.Sleep(1000); } while (!this.stopped && nao.isWalking());
+            do { this.main.sleep(true); } while (!this.stopped && nao.isWalking());
             naoLocation = this.main.locateNao();
             nao.walkToObject(pc.Average, naoLocation);
-            do { Thread.Sleep(1000); } while (!this.stopped && nao.isWalking());
+            do { this.main.sleep(true); } while (!this.stopped && nao.isWalking());
             if (this.stopped) { return; }
             nao.speak("this is a " + obj.identifier);
             if (this.stopped) { return; }
@@ -139,10 +139,10 @@ namespace Controller
                 Console.WriteLine("learning: " + obj.Identifier);
                 Point naoLocation = this.main.locateNao();
                 nao.walkToObject(obj.Average, naoLocation);
-                do { Thread.Sleep(1000); } while (!this.stopped && nao.isWalking());
+                do { this.main.sleep(true); } while (!this.stopped && nao.isWalking());
                 naoLocation = this.main.locateNao();
-                nao.walkToObject(pc.Average, naoLocation);
-                do { Thread.Sleep(1000); } while (!this.stopped && nao.isWalking());
+                nao.walkToObject(obj.Average, naoLocation);
+                do { this.main.sleep(true); } while (!this.stopped && nao.isWalking());
                 if (this.stopped) { return; }
                 nao.speak("what is this object called?");
                 if (this.stopped) { return; }
