@@ -63,6 +63,12 @@ struct ObjectModel
   std::string identifier;
 };
 
+struct nn_match
+{
+  int objectId;
+  float score;
+};
+
 struct DetectedObject
 {
   std::string identifier;
@@ -71,6 +77,19 @@ struct DetectedObject
   float fitness;
 };
 
+
+void getAverageColor(const pcl::PointCloud<pcl::PointXYZRGB> &cloud, Eigen::Vector3f& color) {
+  BOOST_FOREACH(const pcl::PointXYZRGB &pt, cloud) {
+    color(0) += pt.r;
+    color(1) += pt.g;
+    color(2) += pt.b;
+  }
+  color /= cloud.size();
+}
+
+float colorDist(const Eigen::Vector3f& c1, const Eigen::Vector3f& c2) {
+  return (c1 - c2).norm();
+}
 
 class ObjectRecognition
 {
@@ -81,6 +100,7 @@ class ObjectRecognition
       kdtree_ = pcl::KdTreeFLANN<GlobalDescriptorT>::Ptr (new pcl::KdTreeFLANN<GlobalDescriptorT>);
       descriptors_ = GlobalDescriptorsPtr (new GlobalDescriptors);
       table_pose_pub = nh.advertise<geometry_msgs::PoseStamped>("table_pose", 10);
+      identifiers_ = 0;
     }
 
     /*
@@ -153,9 +173,22 @@ class ObjectRecognition
       size_t numClusters = query_clusters.size();
       ROS_INFO("Found %zd clusters", numClusters);
       if (numClusters > 0) {
+        Eigen::Vector3f naoColor(0,0,0);
+        getAverageColor(*(naoModel.points), naoColor);
+        ROS_INFO_STREAM("Nao color: "<<naoColor);
+        int closest_color_idx = -1;
+        float color_dist = 100000;
         for (size_t i = 0; i < numClusters; i++) {
           ObjectModel query_object = query_clusters[i];
           (*descriptors_list) += *(query_object.global_descriptor);
+          Eigen::Vector3f avgColor(0,0,0);
+          getAverageColor(*(query_object.points), avgColor);
+          float thisColorDist = colorDist(avgColor, naoColor);
+          ROS_INFO("Colordist for %zd (color (%f %f %f)), %f", i, avgColor(0), avgColor(1), avgColor(2), thisColorDist);
+          if (thisColorDist < color_dist) {
+            color_dist = thisColorDist;
+            closest_color_idx = i;
+          }
         }
 
         scene_objects_tree.setInputCloud(descriptors_list);
@@ -165,14 +198,15 @@ class ObjectRecognition
         std::vector<float> nn_sqr_distance (1);
         scene_objects_tree.nearestKSearch (naoModel.global_descriptor->points[0], descriptors_list->size(), 
           nn_index, nn_sqr_distance);
-        const int & best_match = nn_index[0];
         ROS_INFO("Locating NAO: Object distances:");
-        for (int i=0; i < descriptors_list->size(); i++) {
-          ROS_INFO("%d: %f", i, nn_sqr_distance[i]);
+        for (int i=0; i < (int)descriptors_list->size(); i++) {
+          ROS_INFO("Object %d: %f", nn_index[i], nn_sqr_distance[i]);
         }
+        int best_match = nn_index[0];
+        ROS_INFO("Finding the NAO, closest squared distance: %f", nn_sqr_distance[0]);
 
-        ROS_INFO("Finding the NAO, squared distance: %f", nn_sqr_distance[0]);
-
+        ROS_INFO("From color, closest is %d. From GDesc, closest is %d", closest_color_idx, best_match);
+        best_match = closest_color_idx;
         if (align) {
           ROS_INFO("Aligning NAO to object %d", best_match);
           PointCloudPtr output = alignModelPoints (naoModel, query_clusters[best_match], params_, nao_transform);
@@ -181,6 +215,77 @@ class ObjectRecognition
       }
       return (naoModel.points);
     }
+
+    bool matchClustersToModel(ObjectModel& model, std::vector<ObjectModel>& query_clusters, int* best_matched_model, bool align, Eigen::Affine3f *transform, float* fitness_val) {
+      pcl::KdTreeFLANN<GlobalDescriptorT> scene_objects_tree;
+      
+      GlobalDescriptorsPtr descriptors_list(new GlobalDescriptors);
+
+      size_t numClusters = query_clusters.size();
+      ROS_INFO("Found %zd clusters", numClusters);
+      if (numClusters > 0) {
+        Eigen::Vector3f modelColor(0,0,0);
+        getAverageColor(*(model.points), modelColor);
+        ROS_INFO_STREAM("Model color: "<<modelColor);
+        int closest_color_idx = -1;
+        float color_dist = 100000;
+        for (size_t i = 0; i < numClusters; i++) {
+          ObjectModel query_object = query_clusters[i];
+          (*descriptors_list) += *(query_object.global_descriptor);
+          Eigen::Vector3f avgColor(0,0,0);
+          getAverageColor(*(query_object.points), avgColor);
+          float thisColorDist = colorDist(avgColor, modelColor);
+          ROS_INFO("Colordist for %zd (color (%f %f %f)), %f", i, avgColor(0), avgColor(1), avgColor(2), thisColorDist);
+          if (thisColorDist < color_dist) {
+            color_dist = thisColorDist;
+            closest_color_idx = i;
+          }
+        }
+
+        scene_objects_tree.setInputCloud(descriptors_list);
+
+        // Search for the NAO descriptor in the scene
+        std::vector<int> nn_index (1);
+        std::vector<float> nn_sqr_distance (1);
+        scene_objects_tree.nearestKSearch (model.global_descriptor->points[0], descriptors_list->size(), 
+          nn_index, nn_sqr_distance);
+        ROS_INFO("Locating NAO: Object distances:");
+        for (int i=0; i < (int)descriptors_list->size(); i++) {
+          ROS_INFO("Object %d: %f", nn_index[i], nn_sqr_distance[i]);
+        }
+        int best_match = nn_index[0];
+        ROS_INFO("Matching object %s, closest squared distance: %f", model.identifier.c_str(), nn_sqr_distance[0]);
+
+        ROS_INFO("From color, closest is %d. From GDesc, closest is %d", closest_color_idx, best_match);
+        ROS_INFO("Closest colordist %f, closest nn %f", color_dist, nn_sqr_distance[0]);
+        bool color_match = color_dist < 1000;
+        bool nn_match = nn_sqr_distance[0] < 2100;
+        if (color_match) {
+          ROS_INFO("Object matched based on color");
+          best_match = closest_color_idx;
+          *fitness_val = color_dist;
+        }
+        else if (nn_match) {
+          ROS_INFO("Object matched based on shape");
+          best_match = nn_index[0];
+          *fitness_val = nn_sqr_distance[0];
+        }
+        else {
+          ROS_INFO("Object didn't match color or shape");
+          return false;
+        }
+        if (align) {
+          ROS_INFO("Aligning object %s to object %d",model.identifier.c_str(), best_match);
+          PointCloudPtr output = alignModelPoints (naoModel, query_clusters[best_match], params_, transform);
+        }
+        *best_matched_model = best_match;
+        return true;
+      } else {
+        ROS_INFO("no clusters");
+        return false;
+      }
+    }
+
 
     PointCloudPtr findNao(const PointCloudPtr & query_cloud, Eigen::Affine3f *nao_transform) {
       if (naoModel.identifier != "nao") {
@@ -210,45 +315,42 @@ class ObjectRecognition
         matchClustersToNao(query_clusters, false, NULL);
         numClusters = query_clusters.size();
         ROS_INFO("After removing NAO, found %zd clusters", numClusters);
-        for (size_t i = 0; i < query_clusters.size(); i++) {
-          ObjectModel query_object = query_clusters[i];
-          ROS_INFO("Recognizing and aligning cluster%zd with %zd points", i, query_object.points->size());
-          const GlobalDescriptorT & query_descriptor = query_object.global_descriptor->points[0];
-         
-          DetectedObject det;
-          std::vector<int> nn_index (1);
-          std::vector<float> nn_sqr_distance (1);
 
-          if (descriptors_->size() > 0) {
-            kdtree_->nearestKSearch (query_descriptor, descriptors_->size(), nn_index, nn_sqr_distance);
-            ROS_INFO("Squared distance: %f", nn_sqr_distance[0]);
-            ROS_INFO("Finding best match to cluster in known objects");
-            for (int i=0; i < descriptors_->size(); i++) {
-              ROS_INFO("Match %d (%s): Distance: %f", i, models_[i].identifier.c_str(), nn_sqr_distance[i]);
-            }
-          } else {
-            nn_sqr_distance[0] = std::numeric_limits<float>::infinity();
-          }
-          if (nn_sqr_distance[0] < unknown_threshold) {
-            const int & best_match = nn_index[0];
-            ROS_INFO_STREAM("Aligning to known object: " << models_[best_match].identifier);
-            alignModelPoints (models_[best_match], query_object, params_, &(det.transform));
-            det.identifier = models_[best_match].identifier;
-            det.points = *(models_[best_match].points);
-            det.fitness = nn_sqr_distance[0];
-          } else {
-            ROS_INFO("No similar objects found, creating new model");
-            PointCloudPtr pts = query_object.points;
+        for (size_t i=0; i < models_.size(); i++) {
+          int match_idx;
+          DetectedObject det;
+          bool foundMatch = matchClustersToModel(models_[i], query_clusters, &match_idx, false, NULL, &(det.fitness));
+          if (foundMatch) {
+            ROS_INFO("Cluster %zd matched existing object %s", i, models_[i].identifier.c_str());
+            det.identifier = models_[i].identifier;
+            det.points = *(models_[i].points);
             Eigen::Vector4f centroid;
-            pcl::compute3DCentroid(*pts, centroid);
-            // This is the zero-mean set of points defining the object
-            pcl::demeanPointCloud(*pts, centroid, det.points);
-            det.identifier = std::string("_unknown")+boost::lexical_cast<std::string>(i);
-            // This is the position of those points
+            pcl::compute3DCentroid(*(query_clusters[match_idx].points), centroid);
+            query_clusters.erase(query_clusters.begin()+match_idx);
             det.transform = Eigen::Affine3f::Identity();
             // Grab the first 3 elements of the centroid (last elem is garbage)
             det.transform.translation() = centroid.head<3>();
+
+            found_objects->push_back(det);
           }
+        }
+
+        ROS_INFO("After removing clusters which match previous objects, there are %zd clusters left", query_clusters.size());
+
+        for (size_t i = 0; i < query_clusters.size(); i++) {
+          DetectedObject det;
+          det.fitness = -1.0;
+          ObjectModel query_object = query_clusters[i];
+          PointCloudPtr pts = query_object.points;
+          Eigen::Vector4f centroid;
+          pcl::compute3DCentroid(*pts, centroid);
+          // This is the zero-mean set of points defining the object
+          pcl::demeanPointCloud(*pts, centroid, det.points);
+          det.identifier = std::string("_unknown")+boost::lexical_cast<std::string>(identifiers_++);
+          // This is the position of those points
+          det.transform = Eigen::Affine3f::Identity();
+          // Grab the first 3 elements of the centroid (last elem is garbage)
+          det.transform.translation() = centroid.head<3>();
           found_objects->push_back(det);
         }
       } else {
@@ -396,6 +498,7 @@ class ObjectRecognition
     std::string camera_frame_;
     ros::Publisher table_pose_pub;
     Eigen::Affine3f latest_plane_transform_;
+    int identifiers_;
 };
 
 #endif

@@ -2,6 +2,7 @@
 #include <Eigen/Core>
 #include <pcl/console/parse.h>
 #include <pcl/io/pcd_io.h>
+#include <pcl/common/pca.h>
 #include "typedefs.h"
 #include "load_clouds.h"
 #include "solution/filters.h"
@@ -18,11 +19,14 @@ int main(int argc, char** argv)
   pcl::console::print_info ("Loaded %s (%zu points)\n", argv[1], cloud->size ());
 
 
-  Eigen::Vector4f centroid;
-  pcl::compute3DCentroid(*cloud, centroid);
+  Eigen::Affine3f newBasis;
+  pcl::PCA<PointT> pcaAligner(*cloud);
+  newBasis.linear() = pcaAligner.getEigenVectors();
+  newBasis.translation() = pcaAligner.getMean().head(3);
 
   PointCloudPtr cloud_demeaned (new PointCloud);
-  pcl::demeanPointCloud(*cloud, centroid, *cloud_demeaned);
+  pcl::transformPointCloud(*cloud, *cloud_demeaned, newBasis.inverse());
+  //pcl::demeanPointCloud(*cloud, centroid, *cloud_demeaned);
 
 
   // Save output
