@@ -12,6 +12,7 @@ namespace VoiceRecog
     class CommandGrammarBuilder
     {
         private static string[] nouns = loadNouns();
+        private static string[] adj = loadAdj();
         private Grammar grammar;
         private string prefix;
         private List<string> strings;
@@ -22,6 +23,20 @@ namespace VoiceRecog
             return rtn;
         }
 
+        private static string[] loadAdj()
+        {
+            string[] input = System.IO.File.ReadAllLines("../../VoiceRecog/adj.txt");
+            HashSet<string> rtn = new HashSet<string>();
+            foreach (string s in input)
+            {
+                if (s.Length != 0)
+                {
+                    rtn.Add(s);
+                }
+            }
+            return rtn.ToArray();
+        }
+        
         public CommandGrammarBuilder(MainController.State state, ObjectLibrary lib)
         {
             this.strings = new List<string>();
@@ -44,6 +59,9 @@ namespace VoiceRecog
                     break;
                 case MainController.State.getName:
                     this.grammar = buildGetNameGrammar();
+                    break;
+                case MainController.State.getProperties:
+                    this.grammar = buildGetPropertiesGrammar();
                     break;
             }
         }
@@ -75,6 +93,14 @@ namespace VoiceRecog
             GrammarBuilder builder = new GrammarBuilder("it is called");
             builder.Append(new Choices(CommandGrammarBuilder.nouns));
             this.prefix = "it is called";
+            return new Grammar(builder);
+        }
+
+        private Grammar buildGetPropertiesGrammar()
+        {
+            GrammarBuilder builder = new GrammarBuilder("it has the property");
+            builder.Append(new Choices(CommandGrammarBuilder.adj));
+            this.prefix = "it has the property ";
             return new Grammar(builder);
         }
 

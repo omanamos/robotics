@@ -14,17 +14,15 @@ namespace Controller
         private MainController main;
         private NaoController nao;
         private ObjectLibrary lib;
-        private Rpc.Client thriftClient;
         private volatile string identifier;
         private volatile string property;
         private volatile bool stopped;
 
-        public NavigationController(MainController main, NaoController nao, ObjectLibrary lib, Rpc.Client thriftClient)
+        public NavigationController(MainController main, NaoController nao, ObjectLibrary lib)
         {
             this.stopped = false;
             this.nao = nao;
             this.lib = lib;
-            this.thriftClient = thriftClient;
             this.main = main;
         }
 
@@ -41,7 +39,7 @@ namespace Controller
         public void identifyKnownObjects()
         {
             this.stopped = false;
-            Point naoLocation = this.thriftClient.locateNao();
+            Point naoLocation = this.main.locateNao();
             foreach (KeyValuePair<string, PointCloud> pair in lib.getKnownObjects())
             {
                 RecogObject obj = lib.getObject(pair.Key);
@@ -69,7 +67,7 @@ namespace Controller
                     if (this.stopped) { return; }
                 }
 
-                naoLocation = this.thriftClient.locateNao();
+                naoLocation = this.main.locateNao();
 
                 // waits for nao to finish speaking
                 System.Threading.Thread.Sleep(4000);
@@ -80,7 +78,7 @@ namespace Controller
         public void findObjects()
         {
             this.stopped = false;
-            Point naoLocation = this.thriftClient.locateNao();
+            Point naoLocation = this.main.locateNao();
             foreach (RecogObject obj in lib.getObjects(property))
             {
                 PointCloud pc = this.lib.getPointCloud(obj.identifier);
@@ -92,7 +90,7 @@ namespace Controller
                 nao.speak("it has the property " + property);
                 if (this.stopped) { return; }
 
-                naoLocation = this.thriftClient.locateNao();
+                naoLocation = this.main.locateNao();
 
                 // waits for nao to finish speaking
                 System.Threading.Thread.Sleep(4000);
@@ -104,7 +102,7 @@ namespace Controller
         {
             this.stopped = false;
             RecogObject obj = this.lib.getObject(this.identifier);
-            Point naoLocation = this.thriftClient.locateNao();
+            Point naoLocation = this.main.locateNao();
             PointCloud pc = this.lib.getPointCloud(obj.identifier);
             nao.walkToObject(pc.Average, naoLocation);
             do { Thread.Sleep(1000); } while (!this.stopped && nao.isWalking());
@@ -120,7 +118,6 @@ namespace Controller
         public void learnUnknownObjects()
         {
             this.stopped = false;
-            this.lib.loadPointClouds(this.thriftClient.getObjects());
             PointCloud obj = this.lib.learnObject();
             if (obj == null)
             {
@@ -131,7 +128,7 @@ namespace Controller
             else
             {
                 Console.WriteLine("learning: " + obj.Identifier);
-                Point naoLocation = this.thriftClient.locateNao();
+                Point naoLocation = this.main.locateNao();
                 nao.walkToObject(obj.Average, naoLocation);
                 do { Thread.Sleep(1000); } while (!this.stopped && nao.isWalking());
                 if (this.stopped) { return; }
