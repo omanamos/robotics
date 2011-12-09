@@ -12,14 +12,19 @@ using Thrift.Transport;
 using Communication;
 using DataStore;
 using VoiceRecog;
+using System.Windows.Media;
 
 namespace Controller
 {
     public class MainController
     {
-        public static readonly String ACTION_LIB_PATH = "temp";
+        public static readonly int THRIFT_SLEEP = 100;
+
+        public static readonly String OBJECT_LIB_PATH = "../../object_lib.data";
         public static readonly String NAO_IP = "127.0.0.1";
-        //public static readonly String NAO_IP = "128.208.4.14";
+        //public static readonly String NAO_IP = "128.208.4.19";
+        //public static readonly String SERVER_IP = "localhost";
+        public static readonly String SERVER_IP = "128.208.4.24";
 
         public enum State { waiting, start, confirmation, learn, getName, getProperties, find };
         private volatile State state;
@@ -32,33 +37,73 @@ namespace Controller
         private TTransport thriftTransport;
 
         private VoiceRecogition recog;
-        private VoiceRecogition interrupt;
 
         private NaoController nao;
         private ObjectLibrary lib;
         private NavigationController nav;
 
         private Thread navThread;
-        private Thread interruptThread;
+        private Thread updateThread;
 
         public MainController(MainWindow window)
         {
             this.window = window;
-            this.nao = new NaoController(NAO_IP);
-            this.lib = new ObjectLibrary();
+            this.nao = new NaoController(NAO_IP, this);
 
-            this.thriftTransport = new TSocket("128.208.4.237", 9090);
+            this.thriftTransport = new TSocket(SERVER_IP, 9090);
             thriftTransport.Open();
             TProtocol protocol = new TBinaryProtocol(thriftTransport);
             this.thriftClient = new Rpc.Client(protocol);
-            
-            this.nav = new NavigationController(this, nao, lib, this.thriftClient);
+
+            this.lib = new ObjectLibrary(this, this.thriftClient, MainController.OBJECT_LIB_PATH);
+            this.updateThread = new Thread(this.lib.updatePointClouds);
+            this.updateThread.Start();
+
+            this.nav = new NavigationController(this, nao, lib);
             this.navThread = null;
 
-            this.interrupt = new VoiceRecogition(CommandGrammarBuilder.buildInterruptGrammar(), this);
-            this.interruptThread = new Thread(this.interrupt.start);
-            this.interruptThread.Start();
             switchStates(State.waiting);
+        }
+
+        public void abort()
+        {
+            Console.Write("Aborting...");
+            this.nav.stop();
+            this.nao.isWalking();
+            this.navThread.Join();
+            this.navThread = null;
+            this.sleep(false);
+            this.nao.isWalking();
+            this.lib.cancelLearning();
+            this.switchStates(State.start);
+            Console.WriteLine("Done!");
+        }
+
+        public void setWalking(bool isWalking)
+        {
+            window.Dispatcher.BeginInvoke(new Action(
+                delegate()
+                {
+                    window.walking_indicator.Background = new SolidColorBrush(isWalking ? Colors.Red : Colors.Green);
+                }));
+        }
+
+        public void setLoading(bool isLoading)
+        {
+            window.Dispatcher.BeginInvoke(new Action(
+                delegate()
+                {
+                    window.blocking_indicator.Background = new SolidColorBrush(isLoading ? Colors.Yellow : Colors.Green);
+                }));
+        }
+
+        public void block()
+        {
+            window.Dispatcher.BeginInvoke(new Action(
+                delegate()
+                {
+                    window.blocking_indicator.Background = new SolidColorBrush(Colors.Red);
+                }));
         }
 
         public void switchStates(State state)
@@ -76,7 +121,7 @@ namespace Controller
 
             if (state != this.state)
             {
-                this.lastChangedState = state;
+                this.lastChangedState = this.state;
             }
             this.prevState = this.state;
             this.state = state;
@@ -98,38 +143,11 @@ namespace Controller
             Console.WriteLine("Current State: " + this.state);
             if (command.Equals("nao abort"))
             {
-                if (this.navThread != null)
-                {
-                    this.interrupt.exit();
-                    Console.Write("Aborting...");
-                    this.nav.stop();
-                    this.navThread.Abort();
-                    this.navThread = null;
-                    this.lib.cancelLearning();
-                    this.switchStates(State.start);
-                    Console.WriteLine("Done!");
-                    this.interrupt.start();
-                }
-                else
-                {
-                    this.lib.cancelLearning();
-                    this.switchStates(State.start);
-                }
+                throw new NotImplementedException("nao abort");
             }
             else if (command.Equals("nao exit"))
             {
-                if (this.navThread != null)
-                {
-                    this.interrupt.exit();
-                    Console.Write("Aborting...");
-                    this.nav.stop();
-                    this.navThread.Abort();
-                    this.navThread = null;
-                    this.lib.cancelLearning();
-                    Console.WriteLine("Done!");
-                    this.interrupt.start();
-                }
-                this.switchStates(State.confirmation);
+                throw new NotImplementedException("nao exit");
             }
             else
             {
@@ -137,7 +155,6 @@ namespace Controller
                 {
                     case State.waiting:
                         switchStates(State.start);
-                        this.lib.loadPointClouds(this.thriftClient.getObjects());
                         break;
                     case State.start:
                         string prefix = command.Split(' ')[1];
@@ -153,7 +170,7 @@ namespace Controller
                         }
                         else if (prefix.Equals("find"))
                         {
-                            string property = removeNWords(command, 3);
+                            string property = removeNWords(command, 3).Replace(" objects", "").Trim();
                             this.nav.setProperty(property);
                             this.navThread = new Thread(this.nav.findObjects);
                             this.navThread.Start();
@@ -182,7 +199,7 @@ namespace Controller
                         this.switchStates(State.confirmation);
                         break;
                     case State.getProperties:
-                        String prop = command.Replace("it has the property", "").Trim();
+                        String prop = command.Replace("it has the property", "").Replace("object", "").Trim();
                         nao.speak("did you say " + prop);
                         this.lib.setLearnedProperty(prop);
                         this.switchStates(State.confirmation);
@@ -214,11 +231,13 @@ namespace Controller
                             {
                                 if (this.prevState == State.confirmation)
                                 {
+                                    this.nao.speak("Ok, what is one of it's properties?");
                                     this.switchStates(State.getProperties);
                                 }
                                 else if (this.lib.addPropertyToLearning())
                                 {
-                                    nao.speak("Ok, I've saved this property. Does this object, does it have any more properties?");
+                                    nao.speak("Ok, I've saved this property. Does " +
+                                        this.lib.curLearningName + " have any more properties?");
                                     this.switchStates(State.confirmation);
                                 }
                                 else
@@ -241,12 +260,25 @@ namespace Controller
                             }
                             else if (lastChangedState == State.getName)
                             {
-                                this.switchStates(State.getName);
-                                nao.speak("OK, what is it really called?");
+                                if (prevState == State.confirmation)
+                                {
+                                    this.lib.saveObject();
+                                    this.switchStates(State.learn);
+                                }
+                                else
+                                {
+                                    this.switchStates(State.getName);
+                                    nao.speak("OK, what is it really called?");
+                                }
                             }
                             else if (lastChangedState == State.getProperties)
                             {
-                                if (this.lib.saveObject(this.thriftClient))
+                                if (prevState == State.getProperties)
+                                {
+                                    this.switchStates(State.getProperties);
+                                    nao.speak("Ok, what is the property really called");
+                                }
+                                else if (this.lib.saveObject())
                                 {
                                     nao.speak("OK, I've saved this object.");
                                     this.switchStates(State.learn);
@@ -270,6 +302,29 @@ namespace Controller
             Console.WriteLine("New State: " + this.state);
         }
 
+        public Point locateNao()
+        {
+            while (this.thriftClient.isWaiting) { this.sleep(true); }
+            this.setLoading(true);
+            return this.thriftClient.locateNao();
+        }
+
+        public void sleep(bool thrift)
+        {
+            if (thrift)
+            {
+                Console.Write(".");
+                Thread.Sleep(THRIFT_SLEEP);
+                Console.Write("!");
+            }
+            else
+            {
+                Console.Write("-");
+                Thread.Sleep(1000);
+                Console.Write("!");
+            }
+        }
+
         private string removeNWords(string str, int n)
         {
             string rtn = "";
@@ -283,14 +338,13 @@ namespace Controller
 
         public void exit()
         {
-            this.save();
+            this.lib.saveAndExit(MainController.OBJECT_LIB_PATH);
             this.recog.exit();
             if (this.navThread != null)
             {
                 this.navThread.Abort();
             }
-            this.interrupt.exit();
-            this.interruptThread.Abort();
+            this.updateThread.Abort();
             this.nao.exit();
             this.thriftTransport.Close();
             Environment.Exit(0);
@@ -299,11 +353,6 @@ namespace Controller
         public ObjectLibrary getLibrary()
         {
             return this.lib;
-        }
-
-        private void save()
-        {
-            //this.lib.save(ACTION_LIB_PATH);
         }
     }
 }

@@ -12,6 +12,8 @@ using Thrift;
 using Thrift.Collections;
 using Thrift.Protocol;
 using Thrift.Transport;
+using System.Threading;
+
 namespace Communication
 {
   public class Rpc {
@@ -23,6 +25,7 @@ namespace Communication
     }
 
     public class Client : Iface {
+      public volatile bool isWaiting;
       public Client(TProtocol prot) : this(prot, prot)
       {
       }
@@ -78,8 +81,12 @@ namespace Communication
 
       public List<PointCloud> getObjects()
       {
+          while (this.isWaiting) Thread.Sleep(100);
+        this.isWaiting = true;
         send_getObjects();
-        return recv_getObjects();
+        List<PointCloud> rtn = recv_getObjects();
+        this.isWaiting = false;
+        return rtn;
       }
 
       public void send_getObjects()
@@ -110,8 +117,13 @@ namespace Communication
 
       public Point locateNao()
       {
+          while (this.isWaiting) Thread.Sleep(100);
+          this.isWaiting = true;
         send_locateNao();
-        return recv_locateNao();
+        Point p = recv_locateNao();
+        Console.WriteLine("TTTTTTTTTTTTTTTTTTTTT: Received Nao Location: ({0}, {1}, {2})", p.X, p.Y, p.Z);
+        this.isWaiting = false;
+        return p;
       }
 
       public void send_locateNao()
@@ -142,8 +154,13 @@ namespace Communication
 
       public bool update(string oldIdentifier, string newIdentifier)
       {
+          while (this.isWaiting) Thread.Sleep(100);
+          this.isWaiting = true;
         send_update(oldIdentifier, newIdentifier);
-        return recv_update();
+        Console.WriteLine("Update: {0} {1}", oldIdentifier, newIdentifier);
+        bool rtn = recv_update();
+        this.isWaiting = false;
+        return rtn;
       }
 
       public void send_update(string oldIdentifier, string newIdentifier)

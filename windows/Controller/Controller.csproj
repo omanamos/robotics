@@ -63,6 +63,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="DataStore\ObjectLibrary.cs" />
+    <Compile Include="DataStore\RecogObject.cs" />
+    <Compile Include="DataStore\SerializableDictionary.cs" />
     <Compile Include="NavigationController.cs" />
     <Compile Include="VoiceRecog\Template.cs" />
     <Compile Include="VoiceRecog\VoiceRecogition.cs">
@@ -112,10 +115,6 @@
     <AppDesigner Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\DataStore\DataStore.csproj">
-      <Project>{0F7EC6DF-D871-473C-A557-E6A901FC1EA3}</Project>
-      <Name>DataStore</Name>
-    </ProjectReference>
     <ProjectReference Include="..\RPC\Communication.csproj">
       <Project>{B2AFC525-083C-4199-93B8-19BA74549A9B}</Project>
       <Name>Communication</Name>
@@ -125,6 +124,9 @@
     <Resource Include="VoiceRecog\nouns.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="VoiceRecog\adj.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
