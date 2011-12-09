@@ -13,7 +13,6 @@ again
 against
 agreement
 air
-all
 almost
 among
 amount
@@ -247,7 +246,6 @@ expert
 eye
 face
 fact
-fall
 false
 family
 far
@@ -321,7 +319,6 @@ hammer
 hand
 hanging
 happy
-harbour
 hard
 harmony
 hat
@@ -344,7 +341,6 @@ hope
 horn
 horse
 hospital
-hour
 house
 how
 humour
@@ -663,7 +659,6 @@ sleep
 slip
 slope
 slow
-small
 smash
 smell
 smile
@@ -735,7 +730,6 @@ table
 tail
 take
 talk
-tall
 taste
 tax
 teaching
@@ -773,6 +767,7 @@ tooth
 top
 touch
 town
+tower
 trade
 train
 transport
@@ -798,7 +793,6 @@ violent
 voice
 waiting
 walk
-wall
 war
 warm
 wash
@@ -817,7 +811,6 @@ wet
 wheel
 when
 where
-while
 whip
 whistle
 white
