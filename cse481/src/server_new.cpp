@@ -49,6 +49,7 @@ class RpcHandler : virtual public communication::RpcIf {
     // Load the recognition params
     loadParams(argc, argv);
     rec.reset(new ObjectRecognition(params));
+    //rec->addModels("models/saved");
     // Load the NAO model in
     rec->loadNaoModel("models/nao3/nao");
     ros::NodeHandle nh;
@@ -79,8 +80,15 @@ class RpcHandler : virtual public communication::RpcIf {
   void removeOldMarkers() {
     ROS_INFO("Removing %zd markers", markers_to_remove.size());
     BOOST_FOREACH(visualization_msgs::Marker m, markers_to_remove) {
-      m.type = visualization_msgs::Marker::DELETE;
-      marker_pub.publish(m);
+      visualization_msgs::Marker toRemove;
+      toRemove.type = visualization_msgs::Marker::DELETE;
+      toRemove.id = m.id;
+      toRemove.scale.x = 1;
+      toRemove.scale.y = 1;
+      toRemove.scale.z = 1;
+      toRemove.header.frame_id = m.header.frame_id;
+      toRemove.ns = m.ns;
+      marker_pub.publish(toRemove);
     }
     markers_to_remove.clear();
   }
@@ -101,11 +109,13 @@ class RpcHandler : virtual public communication::RpcIf {
     m.pose.position.z = translation(2);
     m.pose.orientation.w = 1.0;
 
-    m.color = color;
+    //m.color = color;
+    m.color.a = 1.0;
     m.scale.z = 0.1;
+    m.scale.y = 0.1;
+    m.scale.x = 0.1;
     m.text = text;
     m.id = marker_ids_++;
-    markers_to_remove.push_back(m);
     m.lifetime = ros::Duration();
     return m;
   }
@@ -165,13 +175,14 @@ class RpcHandler : virtual public communication::RpcIf {
         obj_marker.header.frame_id = "/camera_rgb_optical_frame";
         obj_marker.header.stamp = ros::Time::now();
         obj_marker.id = marker_ids_++;
-        markers_to_remove.push_back(obj_marker);
         obj_marker.ns = "unrecognized_objects";
+        markers_to_remove.push_back(obj_marker);
+        marker_pub.publish(obj_marker);
         
         visualization_msgs::Marker obj_name = getTextMarker(det.identifier, 
             obj_marker.header.frame_id, poseInCameraFrame, red);
-        marker_pub.publish(obj_marker);
         marker_pub.publish(obj_name);
+        markers_to_remove.push_back(obj_name);
       } else {
         // Look up the point cloud
         communication::PointCloud& res = objects_map[det.identifier];
@@ -188,14 +199,14 @@ class RpcHandler : virtual public communication::RpcIf {
         obj_marker.header.frame_id = "/camera_rgb_optical_frame";
         obj_marker.header.stamp = ros::Time::now();
         obj_marker.id = marker_ids_++;
-        markers_to_remove.push_back(obj_marker);
         obj_marker.ns = "recognized_objects";
+        markers_to_remove.push_back(obj_marker);
+        marker_pub.publish(obj_marker);
         
         visualization_msgs::Marker obj_name = getTextMarker(det.identifier, 
             obj_marker.header.frame_id, poseInCameraFrame, green);
         marker_pub.publish(obj_name);
-
-        marker_pub.publish(obj_marker);
+        markers_to_remove.push_back(obj_name);
       }
     }
     ROS_INFO("Adding %zd models to the recognizer", unknownModels.size());
@@ -250,6 +261,7 @@ class RpcHandler : virtual public communication::RpcIf {
 
   bool update(const std::string& oldIdentifier, const std::string& newIdentifier) {
     printf("=========update=========\n");
+    printf("Updating %s to %s\n", oldIdentifier.c_str(), newIdentifier.c_str());
     std::map<std::string, communication::PointCloud>::iterator it;
     it = objects_map.find(oldIdentifier);
     rec->updateModelIdentifier(oldIdentifier, newIdentifier);
@@ -258,8 +270,10 @@ class RpcHandler : virtual public communication::RpcIf {
       pc.identifier = newIdentifier;
       objects_map.erase(it);
       objects_map[newIdentifier] = pc;
+      printf("Update done\n");
       return true;
     }
+    printf("Update done, object to update not found\n");
     return false;
   }
 

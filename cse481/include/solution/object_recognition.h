@@ -104,6 +104,25 @@ class ObjectRecognition
     }
 
     /*
+    void addModels(std::string model_folder) {
+      std::vector<std::string> model_files;
+
+      std::vector<DetectedObject> loaded_objects;
+      BOOST_FOREACH(const std::string& model_file, model_files) {
+        // If filename ends pcd extension, load the points and process them
+        PointCloudPtr raw_input (new PointCloud);
+        pcl::io::loadPCDFile (filenames[i], *raw_input);
+
+        DetectedObject object;
+        object.identifier = model_file.substr(0, model_file.size() - 4);
+        object.points = *raw_input;
+        loaded_objects.push_back(object);
+      }
+      addModels(loaded_objects);
+    }
+    */
+
+    /*
     void 
     populateDatabase (const std::vector<std::string> & filenames)
     {
