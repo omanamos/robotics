@@ -19,17 +19,17 @@ namespace Controller
     public class MainController
     {
         public static readonly int THRIFT_SLEEP = 100;
-        public static readonly String ACTION_LIB_PATH = "temp";
+
+        public static readonly String OBJECT_LIB_PATH = "../../object_lib.data";
         public static readonly String NAO_IP = "127.0.0.1";
-        //public static readonly String NAO_IP = "128.208.6.135";
+        //public static readonly String NAO_IP = "128.208.4.19";
         //public static readonly String SERVER_IP = "localhost";
-        public static readonly String SERVER_IP = "128.208.6.139";
+        public static readonly String SERVER_IP = "128.208.4.24";
 
         public enum State { waiting, start, confirmation, learn, getName, getProperties, find };
         private volatile State state;
         private volatile State prevState;
         private volatile State lastChangedState;
-        private volatile bool isBlocking;
         private string prevCommand;
 
         private MainWindow window;
@@ -37,36 +37,30 @@ namespace Controller
         private TTransport thriftTransport;
 
         private VoiceRecogition recog;
-        //private VoiceRecogition interrupt;
 
         private NaoController nao;
         private ObjectLibrary lib;
         private NavigationController nav;
 
         private Thread navThread;
-        //private Thread interruptThread;
         private Thread updateThread;
 
         public MainController(MainWindow window)
         {
             this.window = window;
-            this.nao = new NaoController(NAO_IP);
+            this.nao = new NaoController(NAO_IP, this);
 
             this.thriftTransport = new TSocket(SERVER_IP, 9090);
             thriftTransport.Open();
             TProtocol protocol = new TBinaryProtocol(thriftTransport);
             this.thriftClient = new Rpc.Client(protocol);
 
-            this.lib = new ObjectLibrary(this, this.thriftClient);
+            this.lib = new ObjectLibrary(this, this.thriftClient, MainController.OBJECT_LIB_PATH);
             this.updateThread = new Thread(this.lib.updatePointClouds);
             this.updateThread.Start();
 
             this.nav = new NavigationController(this, nao, lib);
             this.navThread = null;
-
-            //this.interrupt = new VoiceRecogition(CommandGrammarBuilder.buildInterruptGrammar(), this);
-            //this.interruptThread = new Thread();
-            //this.interruptThread.Start();
 
             switchStates(State.waiting);
         }
@@ -74,10 +68,12 @@ namespace Controller
         public void abort()
         {
             Console.Write("Aborting...");
-            this.thriftClient.isWaiting = false;
             this.nav.stop();
-            this.navThread.Abort();
+            this.nao.isWalking();
+            this.navThread.Join();
             this.navThread = null;
+            this.sleep(false);
+            this.nao.isWalking();
             this.lib.cancelLearning();
             this.switchStates(State.start);
             Console.WriteLine("Done!");
@@ -94,7 +90,6 @@ namespace Controller
 
         public void setLoading(bool isLoading)
         {
-            this.isBlocking = false;
             window.Dispatcher.BeginInvoke(new Action(
                 delegate()
                 {
@@ -104,7 +99,6 @@ namespace Controller
 
         public void block()
         {
-            this.isBlocking = true;
             window.Dispatcher.BeginInvoke(new Action(
                 delegate()
                 {
@@ -176,7 +170,7 @@ namespace Controller
                         }
                         else if (prefix.Equals("find"))
                         {
-                            string property = removeNWords(command, 3);
+                            string property = removeNWords(command, 3).Replace(" objects", "").Trim();
                             this.nav.setProperty(property);
                             this.navThread = new Thread(this.nav.findObjects);
                             this.navThread.Start();
@@ -237,6 +231,7 @@ namespace Controller
                             {
                                 if (this.prevState == State.confirmation)
                                 {
+                                    this.nao.speak("Ok, what is one of it's properties?");
                                     this.switchStates(State.getProperties);
                                 }
                                 else if (this.lib.addPropertyToLearning())
@@ -267,6 +262,7 @@ namespace Controller
                             {
                                 if (prevState == State.confirmation)
                                 {
+                                    this.lib.saveObject();
                                     this.switchStates(State.learn);
                                 }
                                 else
@@ -277,7 +273,12 @@ namespace Controller
                             }
                             else if (lastChangedState == State.getProperties)
                             {
-                                if (this.lib.saveObject())
+                                if (prevState == State.getProperties)
+                                {
+                                    this.switchStates(State.getProperties);
+                                    nao.speak("Ok, what is the property really called");
+                                }
+                                else if (this.lib.saveObject())
                                 {
                                     nao.speak("OK, I've saved this object.");
                                     this.switchStates(State.learn);
@@ -304,14 +305,24 @@ namespace Controller
         public Point locateNao()
         {
             while (this.thriftClient.isWaiting) { this.sleep(true); }
+            this.setLoading(true);
             return this.thriftClient.locateNao();
         }
 
         public void sleep(bool thrift)
         {
-            Console.Write(".");
-            Thread.Sleep(THRIFT_SLEEP);
-            Console.Write("!");
+            if (thrift)
+            {
+                Console.Write(".");
+                Thread.Sleep(THRIFT_SLEEP);
+                Console.Write("!");
+            }
+            else
+            {
+                Console.Write("-");
+                Thread.Sleep(1000);
+                Console.Write("!");
+            }
         }
 
         private string removeNWords(string str, int n)
@@ -327,16 +338,13 @@ namespace Controller
 
         public void exit()
         {
-            this.save();
-            this.lib.exit();
+            this.lib.saveAndExit(MainController.OBJECT_LIB_PATH);
             this.recog.exit();
             if (this.navThread != null)
             {
                 this.navThread.Abort();
             }
             this.updateThread.Abort();
-            //this.interrupt.exit();
-            //this.interruptThread.Abort();
             this.nao.exit();
             this.thriftTransport.Close();
             Environment.Exit(0);
@@ -345,11 +353,6 @@ namespace Controller
         public ObjectLibrary getLibrary()
         {
             return this.lib;
-        }
-
-        private void save()
-        {
-            //this.lib.save(ACTION_LIB_PATH);
         }
     }
 }

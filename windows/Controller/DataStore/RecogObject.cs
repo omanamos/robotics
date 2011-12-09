@@ -8,8 +8,7 @@ using Communication;
 
 namespace DataStore
 {
-    [Serializable]
-    public class RecogObject : ISerializable
+    public class RecogObject
     {
         public readonly string identifier;
         private List<string> properties;
@@ -34,16 +33,31 @@ namespace DataStore
             return this.properties;
         }
 
-        public RecogObject(SerializationInfo info, StreamingContext ctxt)
+        public string toString()
         {
-            this.identifier = (string)info.GetValue("Identifier", typeof(string));
-            this.properties = (List<string>)info.GetValue("Properties", typeof(List<string>));
+            String rtn = this.identifier;
+            foreach (string p in this.properties) {
+                rtn += " " + p;
+            }
+            return rtn;
         }
 
-        public void GetObjectData(SerializationInfo info, StreamingContext ctxt)
+        public static RecogObject fromString(string s)
         {
-            info.AddValue("Identifier", identifier);
-            info.AddValue("Properties", properties);
+            string[] parts = s.Split(' ');
+            RecogObject rtn = new RecogObject(parts[0]);
+            bool flag = false;
+            foreach (string p in parts) {
+                if (flag)
+                {
+                    rtn.properties.Add(p);
+                }
+                else
+                {
+                    flag = true;
+                }
+            }
+            return rtn;
         }
     }
 }

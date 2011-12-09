@@ -11,13 +11,12 @@ using Controller;
 
 namespace DataStore
 {
-    [Serializable]
-    public class ObjectLibrary : ISerializable
+    public class ObjectLibrary
     {
         private SerializableDictionary<string, RecogObject> objects;
         private Dictionary<string, PointCloud> knownPointClouds;
         private Dictionary<string, PointCloud> unknownPointClouds;
-        private SerializableDictionary<string, List<RecogObject>> lookupByProperty;
+        private Dictionary<string, List<RecogObject>> lookupByProperty;
 
         private MainController parent;
         private Rpc.Client client;
@@ -33,7 +32,7 @@ namespace DataStore
         public ObjectLibrary(MainController parent, Rpc.Client client)
         {
             this.objects = new SerializableDictionary<string, RecogObject>();
-            this.lookupByProperty = new SerializableDictionary<string, List<RecogObject>>();
+            this.lookupByProperty = new Dictionary<string, List<RecogObject>>();
             this.knownPointClouds = new Dictionary<string, PointCloud>();
             this.unknownPointClouds = new Dictionary<string, PointCloud>();
 
@@ -42,6 +41,31 @@ namespace DataStore
 
             this.parent = parent;
             this.client = client;
+        }
+
+        public ObjectLibrary(MainController parent, Rpc.Client client, string path)
+        {
+            this.objects = new SerializableDictionary<string, RecogObject>();
+            this.lookupByProperty = new Dictionary<string, List<RecogObject>>();
+            this.knownPointClouds = new Dictionary<string, PointCloud>();
+            this.unknownPointClouds = new Dictionary<string, PointCloud>();
+
+            this.shut_down = false;
+            this.block = false;
+
+            this.parent = parent;
+            this.client = client;
+
+            if (System.IO.File.Exists(path))
+            {
+                string[] lines = System.IO.File.ReadAllLines(path);
+                foreach (string line in lines)
+                {
+                    RecogObject obj = RecogObject.fromString(line);
+                    this.addObject(obj);
+                }
+            }
+            
         }
 
         public void addObject(RecogObject obj) 
@@ -201,33 +225,15 @@ namespace DataStore
             return this.lookupByProperty.ContainsKey(property);
         }
 
-        public void exit()
+        public void saveAndExit(string path)
         {
             this.shut_down = true;
-        }
-
-        public void save(string ACTION_LIB_PATH)
-        {
-            throw new NotImplementedException();
-        }
-
-
-        /*
-        private SerializableDictionary<string, RecogObject> objects;
-        private SerializableDictionary<string, List<RecogObject>> lookupByProperty;
-         * 
-         */
-
-        public ObjectLibrary(SerializationInfo info, StreamingContext ctxt)
-        {
-            this.objects = (SerializableDictionary<string, RecogObject>)info.GetValue("Objects", typeof(SerializableDictionary<string, RecogObject>));
-            this.lookupByProperty = (SerializableDictionary<string, List<RecogObject>>)info.GetValue("Property", typeof(SerializableDictionary<string, RecogObject>));
-        }
-
-        public void GetObjectData(SerializationInfo info, StreamingContext ctxt)
-        {
-            info.AddValue("Objects", objects);
-            info.AddValue("Property", lookupByProperty);
+            List<string> lines = new List<string>();
+            foreach (RecogObject obj in this.objects.Values)
+            {
+                lines.Add(obj.toString());
+            }
+            System.IO.File.WriteAllLines(path, lines);
         }
     }
 }
